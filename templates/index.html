@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Missão Simplificar - Auditorias 5S</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <style>
+    *{box-sizing:border-box}
+    html,body{width:100%;margin:0;padding:0;font-family:'DM Sans',sans-serif}
+    body{display:flex;background:#fff;height:100vh;overflow:hidden}
+    .app-wrapper{display:flex;width:100%;height:100%;flex-direction:row}
+    .sidebar{width:240px;height:100%;background:#082C23;display:flex;flex-direction:column;flex-shrink:0;z-index:40;overflow-y:auto;overflow-x:hidden;transition:transform .3s;scrollbar-width:thin;scrollbar-color:#4ade80 transparent}
+    @media(max-width:1024px){.sidebar{width:200px}}
+    @media(max-width:768px){.sidebar{width:180px}}
+    @media(max-width:480px){.sidebar{width:160px}}
+    .sidebar::-webkit-scrollbar{width:6px}
+    .sidebar::-webkit-scrollbar-track{background:transparent}
+    .sidebar::-webkit-scrollbar-thumb{background:#4ade80;border-radius:3px}
+    .sidebar-logo-area{display:flex;align-items:center;justify-content:center;border-bottom:1px solid rgba(255,255,255,.1);padding:16px 12px}
+    .sidebar-logo-area .brand-name{color:#fff;font-weight:800;font-size:16px;letter-spacing:1px;text-align:center;line-height:1.3}
+    .sidebar-logo-area .brand-sub{display:block;color:#4ade80;font-size:9px;font-weight:600;letter-spacing:2px;margin-top:2px}
+    .main-area{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+    .main-area header{flex-shrink:0}
+    .main-content{flex:1;overflow-y:auto;overflow-x:hidden;padding:16px 20px}
+    @media(max-width:768px){.main-content{padding:12px 16px}}
+    #tab-relatorios{padding:0}
+    #rel-type-selector.hidden{display:none !important}
+    #rel-filters-section{display:none}
+    #rel-filters-section.show{display:block !important}
+    .nav-link{display:flex;align-items:center;gap:12px;padding:10px 16px;margin:4px 8px;color:rgba(255,255,255,.75);font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;border-left:4px solid transparent;border-radius:6px;white-space:nowrap;height:40px}
+    @media(max-width:480px){.nav-link{gap:8px;padding:6px 10px;font-size:11px;height:34px;margin:2px 4px} .nav-link span{display:none}}
+    .nav-link:hover{color:#fff;background:rgba(74,222,128,.08)}
+    .nav-link.active{color:#fff;background:rgba(74,222,128,.2);border-left-color:#4ade80;font-weight:600}
+    .tab-content{display:none}
+    .tab-content.active{display:block}
+    .kpi-card{background:#fff;border:1px solid #f0f0f0;border-radius:14px;padding:20px;box-shadow:0 1px 8px rgba(0,0,0,.04);transition:transform .2s,box-shadow .2s}
+    .kpi-card:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.07)}
+    .hero-section{position:relative;border-radius:16px;overflow:hidden;height:160px;display:flex;align-items:center;flex-shrink:0;background:linear-gradient(135deg,#082C23,#14532d)}
+    @media(max-width:768px){.hero-section{height:120px;border-radius:12px}}
+    .hero-content{position:relative;z-index:3;width:100%;padding:32px}
+    @media(max-width:768px){.hero-content{padding:20px 16px}}
+    .donut-ring{transition:stroke-dasharray .6s ease,stroke .4s ease}
+    .response-btn{transition:all .15s;cursor:pointer}
+    .response-btn.sel-atende{background:#dcfce7;border-color:#16a34a;color:#16a34a}
+    .response-btn.sel-parcial{background:#fef9c3;border-color:#ca8a04;color:#ca8a04}
+    .response-btn.sel-nao{background:#fee2e2;border-color:#dc2626;color:#dc2626}
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:50;align-items:center;justify-content:center;padding:1rem;overflow-y:auto}
+    .modal-overlay.show{display:flex}
+    @media(max-width:1023px){.sidebar{position:fixed;transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}}
+    @media print{.no-print{display:none!important}.sidebar{display:none!important}.main-content{overflow:visible}}
+  </style>
+</head>
+<body class="w-full">
+  <div class="app-wrapper">
+    <aside id="sidebar" class="sidebar no-print">
+      <div class="sidebar-logo-area">
+        <div class="brand-name">MISSÃO SIMPLIFICAR<span class="brand-sub">AUDITORIAS 5S</span></div>
+      </div>
+      <nav class="flex-1 py-1">
+        <div class="nav-link active" data-nav="dashboard"><i data-lucide="layout-dashboard" class="w-5 h-5" style="flex-shrink:0"></i><span>Dashboard</span></div>
+        <div class="nav-link" data-nav="ranking"><i data-lucide="trophy" class="w-5 h-5" style="flex-shrink:0"></i><span>Ranking</span></div>
+        <div class="nav-link" data-nav="auditoria"><i data-lucide="clipboard-check" class="w-5 h-5" style="flex-shrink:0"></i><span>Nova Auditoria</span></div>
+        <div class="nav-link" data-nav="relatorios"><i data-lucide="file-text" class="w-5 h-5" style="flex-shrink:0"></i><span>Relatórios</span></div>
+        <div class="nav-link" data-nav="departamentos"><i data-lucide="building-2" class="w-5 h-5" style="flex-shrink:0"></i><span>Departamentos</span></div>
+        <div class="nav-link" data-nav="criterios"><i data-lucide="list-checks" class="w-5 h-5" style="flex-shrink:0"></i><span>Critérios</span></div>
+        <div class="nav-link" data-nav="configuracoes"><i data-lucide="settings" class="w-5 h-5" style="flex-shrink:0"></i><span>Configurações</span></div>
+      </nav>
+    </aside>
+    <div class="main-area">
+      <header class="bg-white border-b border-gray-100 px-6 py-3 flex items-center justify-between gap-4 no-print flex-shrink-0">
+        <div class="flex items-center gap-3 min-w-0">
+          <button id="mobile-menu-btn" class="lg:hidden p-2 flex-shrink-0"><i data-lucide="menu" class="w-5 h-5"></i></button>
+          <div class="min-w-0">
+            <h1 id="page-heading" class="font-extrabold text-xl truncate">Missão Simplificar</h1>
+            <p id="page-subheading" class="mt-0.5 text-xs truncate text-gray-500">A jornada rumo à excelência.</p>
+          </div>
+        </div>
+        <div id="header-controls" class="flex items-center gap-3 flex-shrink-0">
+          <select id="dept-select-dash" class="border border-gray-200 rounded-full px-4 py-2 text-xs font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-green-500 hidden sm:block"></select>
+          <button id="dash-pdf-btn" class="px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-lg hover:bg-red-700 flex items-center gap-2"><i data-lucide="file-text" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">PDF</span></button>
+        </div>
+      </header>
+      <div class="main-content">
+        <!-- DASHBOARD -->
+        <div id="tab-dashboard" class="tab-content active">
+          <div class="hero-section mb-3">
+            <div class="hero-content flex items-center justify-between">
+              <div class="min-w-0 flex-1">
+                <h2 id="hero-title" class="text-white font-extrabold leading-tight text-lg sm:text-2xl">Como está meu setor?</h2>
+                <p id="hero-subtitle" class="text-white/80 mt-2 text-xs sm:text-sm">Missão Simplificar · Auditorias 5S</p>
+              </div>
+              <span id="hero-dept-name" class="px-5 py-2 bg-amber-500 text-white rounded-full text-sm font-bold shadow-lg flex-shrink-0">Todos</span>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-3">
+            <div class="space-y-3" id="kpi-container">
+              <div class="kpi-card" data-pillar="Utilização">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0"><i data-lucide="layout-grid" class="w-4 h-4 text-amber-600"></i></div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-gray-700 text-sm">Utilização</p>
+                    <div class="flex items-baseline gap-1 mt-0.5"><span class="kpi-value font-extrabold text-2xl">0</span><span class="text-gray-400 text-xs">%</span></div>
+                    <div class="w-full bg-gray-100 rounded-full h-1.5 mt-1.5 overflow-hidden"><div class="kpi-bar h-full rounded-full" style="width:0%;background:#eab308"></div></div>
+                  </div>
+                  <div class="flex flex-col items-center gap-0.5 flex-shrink-0"><span class="emoji text-lg">😐</span><span class="classification text-[8px] font-bold uppercase text-gray-600"></span></div>
+                </div>
+              </div>
+              <div class="kpi-card" data-pillar="Limpeza">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-lg bg-cyan-50 flex items-center justify-center flex-shrink-0"><i data-lucide="sparkles" class="w-4 h-4 text-cyan-600"></i></div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-gray-700 text-sm">Limpeza</p>
+                    <div class="flex items-baseline gap-1 mt-0.5"><span class="kpi-value font-extrabold text-2xl">0</span><span class="text-gray-400 text-xs">%</span></div>
+                    <div class="w-full bg-gray-100 rounded-full h-1.5 mt-1.5 overflow-hidden"><div class="kpi-bar h-full rounded-full" style="width:0%;background:#06b6d4"></div></div>
+                  </div>
+                  <div class="flex flex-col items-center gap-0.5 flex-shrink-0"><span class="emoji text-lg">😐</span><span class="classification text-[8px] font-bold uppercase text-gray-600"></span></div>
+                </div>
+              </div>
+              <div class="kpi-card" data-pillar="Padronização">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center flex-shrink-0"><i data-lucide="clipboard-check" class="w-4 h-4 text-rose-500"></i></div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-gray-700 text-sm">Padronização</p>
+                    <div class="flex items-baseline gap-1 mt-0.5"><span class="kpi-value font-extrabold text-2xl">0</span><span class="text-gray-400 text-xs">%</span></div>
+                    <div class="w-full bg-gray-100 rounded-full h-1.5 mt-1.5 overflow-hidden"><div class="kpi-bar h-full rounded-full" style="width:0%;background:#f43f5e"></div></div>
+                  </div>
+                  <div class="flex flex-col items-center gap-0.5 flex-shrink-0"><span class="emoji text-lg">😐</span><span class="classification text-[8px] font-bold uppercase text-gray-600"></span></div>
+                </div>
+              </div>
+              <div class="kpi-card" data-pillar="Disciplina">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0"><i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i></div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-gray-700 text-sm">Disciplina</p>
+                    <div class="flex items-baseline gap-1 mt-0.5"><span class="kpi-value font-extrabold text-2xl">0</span><span class="text-gray-400 text-xs">%</span></div>
+                    <div class="w-full bg-gray-100 rounded-full h-1.5 mt-1.5 overflow-hidden"><div class="kpi-bar h-full rounded-full" style="width:0%;background:#10b981"></div></div>
+                  </div>
+                  <div class="flex flex-col items-center gap-0.5 flex-shrink-0"><span class="emoji text-lg">😐</span><span class="classification text-[8px] font-bold uppercase text-gray-600"></span></div>
+                </div>
+              </div>
+              <footer class="rounded-xl p-3 border border-gray-100">
+                <div class="flex flex-wrap gap-x-3 gap-y-1.5 text-sm text-gray-600">
+                  <div class="flex items-center gap-1.5"><span>😀</span><span><strong class="text-green-600">ÓTIMO</strong> 95–100%</span></div>
+                  <div class="flex items-center gap-1.5"><span>🙂</span><span><strong class="text-blue-600">BOM</strong> 80–94%</span></div>
+                  <div class="flex items-center gap-1.5"><span>😐</span><span><strong class="text-yellow-500">REGULAR</strong> 60–79%</span></div>
+                  <div class="flex items-center gap-1.5"><span>☹️</span><span><strong class="text-red-500">RUIM</strong> 0–59%</span></div>
+                </div>
+              </footer>
+            </div>
+            <div class="flex flex-col gap-3">
+              <div class="kpi-card flex flex-col items-center py-5">
+                <h2 id="avg-title" class="text-[10px] font-bold uppercase tracking-widest text-gray-600 mb-3">Média Geral</h2>
+                <div class="relative w-20 h-20 sm:w-24 sm:h-24 mb-3">
+                  <svg viewbox="0 0 120 120" class="w-full h-full -rotate-90"><circle cx="60" cy="60" r="50" fill="none" stroke="#f3f4f6" stroke-width="14"/><circle id="donut-progress" cx="60" cy="60" r="50" fill="none" stroke="#eab308" stroke-width="14" stroke-linecap="round" class="donut-ring" stroke-dasharray="0 314"/></svg>
+                  <div class="absolute inset-0 flex items-center justify-center"><span id="donut-value" class="text-xs sm:text-base font-extrabold text-gray-800">0%</span></div>
+                </div>
+              </div>
+              <div class="kpi-card text-center py-4"><p class="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-1">Escritório</p><span id="dash-office-avg" class="font-extrabold text-lg">0%</span></div>
+              <div class="kpi-card text-center py-4"><p class="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-1">Área Comum</p><span id="dash-common-avg" class="font-extrabold text-lg">0%</span></div>
+              <div class="kpi-card text-center py-4">
+                <p id="sector-class-label" class="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-2">Classificação</p>
+                <div class="flex items-center justify-center gap-2"><span id="sector-emoji" class="text-base">😐</span><span id="sector-text" class="text-base font-extrabold">—</span></div>
+              </div>
+              <div class="kpi-card text-center py-3"><p class="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-1">Auditorias</p><span id="dash-audit-count" class="font-extrabold text-lg">0</span></div>
+              <div class="kpi-card text-center py-3"><p class="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-1">Última Auditoria</p><span id="dash-last-audit" class="font-bold text-xs text-gray-700">—</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- RANKING -->
+        <div id="tab-ranking" class="tab-content">
+          <div class="kpi-card">
+            <div class="text-center mb-6">
+              <h2 class="text-2xl font-extrabold text-gray-800 mb-1">🏆 Ranking dos Departamentos</h2>
+              <p class="text-sm text-gray-500">Classificação baseada nas auditorias realizadas</p>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead>
+                  <tr class="bg-emerald-50 border-b-2 border-emerald-200">
+                    <th class="p-3 text-left text-xs font-bold uppercase text-gray-700">Posição</th>
+                    <th class="p-3 text-left text-xs font-bold uppercase text-gray-700">Departamento</th>
+                    <th class="p-3 text-center text-xs font-bold uppercase text-gray-700">Média</th>
+                    <th class="p-3 text-center text-xs font-bold uppercase text-gray-700 hidden sm:table-cell">Classificação</th>
+                    <th class="p-3 text-right text-xs font-bold uppercase text-gray-700 hidden lg:table-cell">Última Auditoria</th>
+                  </tr>
+                </thead>
+                <tbody id="ranking-table"></tbody>
+              </table>
+            </div>
+            <p id="ranking-empty" class="text-gray-400 text-sm text-center py-8">Sem dados de auditoria disponíveis.</p>
+          </div>
+        </div>
+        <!-- NOVA AUDITORIA -->
+        <div id="tab-auditoria" class="tab-content">
+          <div class="kpi-card">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Nova Auditoria</h2>
+            <div id="audit-step-info">
+              <div class="mb-6">
+                <label class="block text-xs font-semibold text-gray-700 mb-3">Tipo de Auditoria *</label>
+                <div id="audit-type-radio-group" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                <div id="audit-dept-container" class="hidden">
+                  <label class="block text-xs font-semibold text-gray-700 mb-1" for="audit-dept">Departamento *</label>
+                  <select id="audit-dept" class="w-full border rounded-lg px-3 py-2 text-sm"><option value="">Selecione...</option></select>
+                </div>
+                <div><label class="block text-xs font-semibold text-gray-700 mb-1" for="audit-auditor">Auditor *</label><input id="audit-auditor" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Nome do auditor"></div>
+                <div><label class="block text-xs font-semibold text-gray-700 mb-1" for="audit-date">Data *</label><input id="audit-date" type="date" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+              </div>
+              <button id="audit-start-btn" class="w-full px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 mb-2">Iniciar Auditoria</button>
+              <p id="audit-start-err" class="text-red-600 text-xs mt-2 hidden"></p>
+            </div>
+            <div id="audit-step-checklist" class="hidden">
+              <div class="flex items-center justify-between mb-4"><h3 class="font-bold text-base text-emerald-800" id="checklist-title">📋 Checklist</h3></div>
+              <div id="audit-checklist-container" class="space-y-4"></div>
+              <div id="audit-validation-msg" class="hidden mt-4 p-3 rounded-lg text-sm font-medium bg-red-50 text-red-700 border border-red-200"></div>
+              <div class="flex gap-2 mt-4">
+                <button id="cancel-audit-btn" class="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700">Cancelar</button>
+                <button id="finish-audit-btn" class="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700">Avaliação Finalizada</button>
+              </div>
+            </div>
+          </div>
+          <div id="audit-step-result" class="hidden">
+            <h3 class="font-bold text-base text-gray-800 mb-4">Resultado da Auditoria</h3>
+            <div id="result-summary" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 mb-4"></div>
+            <div class="text-center mb-4"><span id="result-emoji" class="text-4xl"></span><p id="result-class" class="font-extrabold text-lg mt-1"></p></div>
+            <div id="result-pillars" class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4"></div>
+            <div class="flex gap-2">
+              <button id="new-audit-btn" class="px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg">Nova Auditoria</button>
+              <button id="result-pdf-btn" class="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg flex items-center gap-2"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> PDF</button>
+            </div>
+          </div>
+        </div>
+        <!-- RELATÓRIOS -->
+        <div id="tab-relatorios" class="tab-content">
+          <div id="rel-type-selector" class="px-5 pt-0">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button id="rel-btn-escritorio" class="rel-type-btn h-32 rounded-xl border-2 border-gray-200 bg-white hover:border-blue-400 hover:bg-blue-50 transition flex flex-col items-center justify-center gap-3 p-4"><i data-lucide="building-2" class="w-8 h-8 text-blue-600"></i><span class="font-bold text-lg text-gray-800">Escritório</span><span class="text-xs text-gray-500">Auditorias de escritório</span></button>
+              <button id="rel-btn-comum" class="rel-type-btn h-32 rounded-xl border-2 border-gray-200 bg-white hover:border-amber-400 hover:bg-amber-50 transition flex flex-col items-center justify-center gap-3 p-4"><i data-lucide="users" class="w-8 h-8 text-amber-600"></i><span class="font-bold text-lg text-gray-800">Área Comum</span><span class="text-xs text-gray-500">Auditorias de área comum</span></button>
+            </div>
+          </div>
+          <div id="rel-filters-section" class="kpi-card hidden mx-5 mt-3" style="display:none">
+            <div class="flex justify-between items-center mb-4">
+              <div><h2 class="text-xl font-bold text-gray-800">Histórico de Auditorias</h2><p id="rel-type-label" class="text-xs text-gray-500 mt-1"></p></div>
+              <button id="rel-back-btn" class="text-gray-500 hover:text-gray-700"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
+            </div>
+            <div class="flex flex-col gap-4 mb-4">
+              <div class="flex flex-wrap gap-2">
+                <select id="rel-dept" class="border rounded-lg px-3 py-2 text-sm"><option value="">Todos Departamentos</option></select>
+                <select id="rel-classification" class="border rounded-lg px-3 py-2 text-sm"><option value="">Todas Classificações</option><option>ÓTIMO</option><option>BOM</option><option>REGULAR</option><option>RUIM</option></select>
+                <input id="rel-search" class="border rounded-lg px-3 py-2 text-sm flex-1 min-w-0" placeholder="Pesquisar...">
+              </div>
+              <div class="flex flex-wrap gap-2 mb-4">
+                <input id="rel-date-from" type="date" class="border rounded-lg px-3 py-2 text-sm">
+                <input id="rel-date-to" type="date" class="border rounded-lg px-3 py-2 text-sm">
+                <button id="rel-filter-btn" class="px-4 py-2 bg-gray-800 text-white text-sm rounded-lg font-semibold">Filtrar</button>
+                <button id="rel-clear-btn" class="px-4 py-2 bg-gray-400 text-white text-sm rounded-lg font-semibold hover:bg-gray-500">Limpar Filtros</button>
+              </div>
+              <div id="reports-list" class="space-y-3"></div>
+              <p id="rel-empty" class="text-gray-400 text-sm text-center py-6">Nenhuma auditoria registrada.</p>
+            </div>
+          </div>
+        </div>
+        <!-- DEPARTAMENTOS -->
+        <div id="tab-departamentos" class="tab-content">
+          <div class="mb-4 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-gray-800">Departamentos</h2>
+            <button id="add-dept-btn" class="px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Novo</button>
+          </div>
+          <div id="dept-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+        <!-- CRITÉRIOS -->
+        <div id="tab-criterios" class="tab-content">
+          <div class="kpi-card">
+            <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+              <h2 class="text-xl font-bold text-gray-800">Critérios de Avaliação</h2>
+              <div class="flex gap-2">
+                <button id="add-criterion-btn" class="px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Novo</button>
+                <button id="seed-criteria-btn" class="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 flex items-center gap-2"><i data-lucide="refresh-cw" class="w-4 h-4"></i> Carregar Padrão</button>
+              </div>
+            </div>
+            <div class="mb-3 flex flex-col sm:flex-row gap-2">
+              <select id="filter-type-crit" class="border rounded-lg px-3 py-2 text-sm"><option value="">Todos Tipos</option><option>Escritório</option><option>Área Comum</option></select>
+              <select id="filter-pillar-crit" class="border rounded-lg px-3 py-2 text-sm"><option value="">Todos Sensos</option><option>Utilização</option><option>Limpeza</option><option>Padronização</option><option>Disciplina</option></select>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead><tr class="bg-gray-50 text-left"><th class="p-2">Tipo</th><th class="p-2">Senso</th><th class="p-2">Item</th><th class="p-2">Pergunta</th><th class="p-2">Critério</th><th class="p-2 w-14">Ativo</th><th class="p-2 w-20">Ações</th></tr></thead>
+                <tbody id="criteria-table"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <!-- CONFIGURAÇÕES -->
+        <div id="tab-configuracoes" class="tab-content">
+          <div class="kpi-card">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Configurações do Sistema</h2>
+            <div class="space-y-6">
+              <fieldset class="border rounded-lg p-4"><legend class="text-sm font-bold text-gray-700 px-2">Empresa</legend>
+                <div><label class="block text-xs font-semibold text-gray-600 mb-1" for="cfg-empresa-nome">Nome da Empresa</label><input id="cfg-empresa-nome" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Nome"></div>
+              </fieldset>
+              <fieldset class="border rounded-lg p-4"><legend class="text-sm font-bold text-gray-700 px-2">Classificação</legend>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div><label class="block text-xs font-semibold text-gray-600 mb-1">Ótimo (mín %)</label><input id="cfg-otimo" type="number" class="w-full border rounded-lg px-3 py-2 text-sm" value="95"></div>
+                  <div><label class="block text-xs font-semibold text-gray-600 mb-1">Bom (mín %)</label><input id="cfg-bom" type="number" class="w-full border rounded-lg px-3 py-2 text-sm" value="80"></div>
+                  <div><label class="block text-xs font-semibold text-gray-600 mb-1">Regular (mín %)</label><input id="cfg-regular" type="number" class="w-full border rounded-lg px-3 py-2 text-sm" value="60"></div>
+                  <div><label class="block text-xs font-semibold text-gray-600 mb-1">Ruim (abaixo de)</label><input id="cfg-ruim" type="number" class="w-full border rounded-lg px-3 py-2 text-sm" value="60" disabled></div>
+                </div>
+              </fieldset>
+              <fieldset class="border rounded-lg p-4"><legend class="text-sm font-bold text-gray-700 px-2">PDF</legend>
+                <div class="space-y-2">
+                  <label class="flex items-center gap-2 text-sm"><input id="cfg-pdf-fotos" type="checkbox" checked> Exibir fotos no PDF</label>
+                  <label class="flex items-center gap-2 text-sm"><input id="cfg-pdf-obs" type="checkbox" checked> Exibir observações no PDF</label>
+                </div>
+              </fieldset>
+              <button id="save-config-btn" class="px-5 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700">Salvar Configurações</button>
+              <span id="config-msg" class="text-sm text-green-600 ml-3 hidden">✓ Salvo!</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODALS -->
+  <div id="dept-modal" class="modal-overlay">
+    <form id="dept-form" class="bg-white rounded-xl p-6 w-full max-w-md space-y-3">
+      <h3 class="font-bold text-lg" id="dept-modal-title">Novo Departamento</h3>
+      <label for="dept-name" class="block text-xs font-semibold text-gray-700">Nome *</label><input id="dept-name" class="w-full border rounded-lg px-3 py-2 text-sm" required>
+      <label for="dept-responsible" class="block text-xs font-semibold text-gray-700">Responsável</label><input id="dept-responsible" class="w-full border rounded-lg px-3 py-2 text-sm">
+      <div class="flex gap-2 pt-2"><button type="submit" class="flex-1 bg-emerald-600 text-white py-2 rounded-lg font-semibold text-sm">Salvar</button><button type="button" id="cancel-dept" class="flex-1 bg-gray-200 py-2 rounded-lg font-semibold text-sm">Cancelar</button></div>
+      <input type="hidden" id="dept-edit-id" value="">
+    </form>
+  </div>
+  <div id="criterion-modal" class="modal-overlay">
+    <form id="criterion-form" class="bg-white rounded-xl p-6 w-full max-w-md space-y-3">
+      <h3 class="font-bold text-lg" id="criterion-modal-title">Novo Critério</h3>
+      <label for="crit-checklist" class="block text-xs font-semibold text-gray-700">Checklist *</label><select id="crit-checklist" class="w-full border rounded-lg px-3 py-2 text-sm" required><option value="">Selecione</option><option>Escritório</option><option>Área Comum</option></select>
+      <label for="crit-senso" class="block text-xs font-semibold text-gray-700">Senso *</label><select id="crit-senso" class="w-full border rounded-lg px-3 py-2 text-sm" required><option value="">Selecione</option><option>Utilização</option><option>Limpeza</option><option>Padronização</option><option>Disciplina</option></select>
+      <label for="crit-item" class="block text-xs font-semibold text-gray-700">Item *</label><input id="crit-item" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Ex: 1.1" required>
+      <label for="crit-question" class="block text-xs font-semibold text-gray-700">Pergunta *</label><input id="crit-question" class="w-full border rounded-lg px-3 py-2 text-sm" required>
+      <label for="crit-criterion" class="block text-xs font-semibold text-gray-700">Critério de Verificação</label><input id="crit-criterion" class="w-full border rounded-lg px-3 py-2 text-sm">
+      <div class="flex gap-2 pt-2"><button type="submit" class="flex-1 bg-emerald-600 text-white py-2 rounded-lg font-semibold text-sm">Salvar</button><button type="button" id="cancel-criterion" class="flex-1 bg-gray-200 py-2 rounded-lg font-semibold text-sm">Cancelar</button></div>
+      <input type="hidden" id="crit-edit-id" value="">
+    </form>
+  </div>
+  <div id="cancel-confirm-modal" class="modal-overlay">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md">
+      <h3 class="font-bold text-lg text-gray-800 mb-2">Cancelar Auditoria?</h3>
+      <p class="text-sm text-gray-600 mb-6">Todos os dados não salvos serão perdidos.</p>
+      <div class="flex gap-2"><button id="cancel-back-btn" class="flex-1 px-4 py-2 bg-gray-200 text-sm font-semibold rounded-lg">Voltar</button><button id="cancel-yes-btn" class="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg">Confirmar</button></div>
+    </div>
+  </div>
+  <div id="report-modal" class="modal-overlay" style="overflow-y:auto">
+    <div class="bg-white rounded-xl p-6 w-full max-w-4xl my-8">
+      <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-xl text-gray-800" id="report-title">Relatório</h3><button id="close-report-btn" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button></div>
+      <div id="report-content"></div>
+      <div class="flex gap-2 pt-4 border-t mt-4">
+        <button id="report-pdf-btn" class="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg flex items-center justify-center gap-2"><i data-lucide="file-text" class="w-4 h-4"></i> Gerar PDF</button>
+        <button id="report-close-btn" class="flex-1 px-4 py-2 bg-gray-200 text-sm font-semibold rounded-lg">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Substitui o dataSdk do Canva por chamadas à API Flask -->
+  <script src="/static/data-sdk-shim.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>
