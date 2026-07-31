@@ -370,7 +370,7 @@ function buildChecklistUI(crits,checklistType,container){
     const key=inp.dataset.key;
     const file=e.target.files[0];
     if(!file)return;
-    if(file.size>3*1024*1024){alert('A foto deve ter no máximo 3MB.');inp.value='';return}
+    if(file.size>5*1024*1024){alert('A foto deve ter no máximo 3MB.');inp.value='';return}
     const reader=new FileReader();
     reader.onload=()=>{
       auditResponses[key].photo=reader.result;
