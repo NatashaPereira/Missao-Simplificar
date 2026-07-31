@@ -26,10 +26,6 @@ from pathlib import Path
 
 from flask import Flask, g, jsonify, request, send_from_directory
 
-@app.route("/")
-def home():
-    return render_template("index.html")
-
 BASE_DIR = Path(__file__).parent
 DB_PATH = BASE_DIR / "instance" / "database.db"
 DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
