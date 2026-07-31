@@ -352,9 +352,9 @@ function buildChecklistUI(crits,checklistType,container){
     section.innerHTML=`<h4 class="font-bold text-sm text-gray-700 mb-2 border-b pb-1 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>${pillar}</h4>`;
     items.forEach(c=>{
       const key=checklistType+'|'+c.__backendId;
-      auditResponses[key]={response:null,observation:'',photo:'',entity_id:c.entity_id};
+      auditResponses[key]={response:null,observation:'',photos:[],entity_id:c.entity_id};
       const row=document.createElement('div');row.className='p-3 bg-gray-50 rounded-lg mb-2';
-      row.innerHTML=`<div class="mb-1"><span class="text-xs font-bold text-emerald-700 mr-2">${c.item_number}</span><span class="text-sm font-medium text-gray-800">${c.question}</span></div>${c.criterion?`<p class="text-xs text-gray-500 mb-2">${c.criterion}</p>`:''}<div class="flex gap-2 flex-wrap mb-2"><button type="button" class="response-btn px-3 py-1.5 text-xs font-semibold border rounded-lg" data-key="${key}" data-val="atende">✅ Atende</button><button type="button" class="response-btn px-3 py-1.5 text-xs font-semibold border rounded-lg" data-key="${key}" data-val="parcial">🟡 Parcial</button><button type="button" class="response-btn px-3 py-1.5 text-xs font-semibold border rounded-lg" data-key="${key}" data-val="nao">❌ Não Atende</button></div><div class="mb-2"><input class="obs-input w-full border rounded px-2 py-1 text-xs" placeholder="Observação" data-key="${key}"></div><div class="flex items-center gap-2"><label class="photo-btn cursor-pointer flex items-center gap-1 px-3 py-1.5 text-xs font-semibold border rounded-lg bg-white hover:bg-gray-100"><i data-lucide="camera" class="w-3.5 h-3.5"></i> Foto<input type="file" accept="image/*" class="photo-input hidden" data-key="${key}"></label><img class="photo-preview hidden w-14 h-14 object-cover rounded-lg border" data-key="${key}"><button type="button" class="photo-remove-btn hidden text-red-500 text-xs font-semibold" data-key="${key}">Remover</button></div>`;
+      row.innerHTML=`<div class="mb-1"><span class="text-xs font-bold text-emerald-700 mr-2">${c.item_number}</span><span class="text-sm font-medium text-gray-800">${c.question}</span></div>${c.criterion?`<p class="text-xs text-gray-500 mb-2">${c.criterion}</p>`:''}<div class="flex gap-2 flex-wrap mb-2"><button type="button" class="response-btn px-3 py-1.5 text-xs font-semibold border rounded-lg" data-key="${key}" data-val="atende">✅ Atende</button><button type="button" class="response-btn px-3 py-1.5 text-xs font-semibold border rounded-lg" data-key="${key}" data-val="parcial">🟡 Parcial</button><button type="button" class="response-btn px-3 py-1.5 text-xs font-semibold border rounded-lg" data-key="${key}" data-val="nao">❌ Não Atende</button></div><div class="mb-2"><input class="obs-input w-full border rounded px-2 py-1 text-xs" placeholder="Observação" data-key="${key}"></div><div class="mb-1"><div class="flex items-center gap-2 flex-wrap"><label class="photo-btn cursor-pointer flex items-center gap-1 px-3 py-1.5 text-xs font-semibold border rounded-lg bg-white hover:bg-gray-100" data-key="${key}"><i data-lucide="camera" class="w-3.5 h-3.5"></i> <span class="photo-btn-label">Foto (0/3)</span><input type="file" accept="image/*" capture="environment" class="photo-input hidden" data-key="${key}"></label></div><div class="photo-thumbs flex gap-2 flex-wrap mt-2" data-key="${key}"></div><p class="photo-status text-[11px] text-gray-400 mt-1 hidden" data-key="${key}"></p></div>`;
       section.appendChild(row);
     });
     container.appendChild(section);
@@ -366,32 +366,81 @@ function buildChecklistUI(crits,checklistType,container){
     btn.classList.add(val==='atende'?'sel-atende':val==='parcial'?'sel-parcial':'sel-nao');
   })});
   container.querySelectorAll('.obs-input').forEach(inp=>{inp.addEventListener('input',()=>{auditResponses[inp.dataset.key].observation=inp.value})});
-  container.querySelectorAll('.photo-input').forEach(inp=>{inp.addEventListener('change',(e)=>{
+  container.querySelectorAll('.photo-input').forEach(inp=>{inp.addEventListener('change',async(e)=>{
     const key=inp.dataset.key;
     const file=e.target.files[0];
+    inp.value=''; // limpa logo para permitir escolher a mesma foto de novo e evitar estado travado
     if(!file)return;
-    if(file.size>5*1024*1024){alert('A foto deve ter no máximo 3MB.');inp.value='';return}
+    if(!auditResponses[key].photos)auditResponses[key].photos=[];
+    if(auditResponses[key].photos.length>=3){alert('Máximo de 3 fotos por critério.');return}
+    if(file.size>10*1024*1024){alert('Essa foto é muito grande (máx. 10MB). Tente outra ou tire com menos resolução.');return}
+    const statusEl=document.querySelector(`.photo-status[data-key="${cssEscape(key)}"]`);
+    if(statusEl){statusEl.textContent='Processando foto...';statusEl.classList.remove('hidden')}
+    try{
+      const compressed=await compressImage(file,1280,0.72);
+      auditResponses[key].photos.push(compressed);
+      renderPhotoThumbs(key);
+      if(statusEl)statusEl.classList.add('hidden');
+    }catch(err){
+      console.error('Erro ao processar foto:',err);
+      if(statusEl){statusEl.textContent='Não foi possível processar essa foto. Tente novamente.';statusEl.classList.remove('hidden')}
+      else alert('Não foi possível processar essa foto. Tente novamente ou escolha outra imagem.');
+    }
+  })});
+  container.querySelectorAll('.photo-thumbs').forEach(el=>renderPhotoThumbs(el.dataset.key));
+  lucide.createIcons();
+}
+
+function cssEscape(s){return String(s).replace(/["\\]/g,'\\$&')}
+
+function compressImage(file,maxDim,quality){
+  return new Promise((resolve,reject)=>{
     const reader=new FileReader();
+    reader.onerror=()=>reject(reader.error||new Error('Falha ao ler arquivo'));
     reader.onload=()=>{
-      auditResponses[key].photo=reader.result;
-      const row=inp.closest('.p-3');
-      const preview=row.querySelector('.photo-preview');
-      const removeBtn=row.querySelector('.photo-remove-btn');
-      preview.src=reader.result;
-      preview.classList.remove('hidden');
-      removeBtn.classList.remove('hidden');
+      const img=new Image();
+      img.onerror=()=>reject(new Error('Falha ao carregar imagem'));
+      img.onload=()=>{
+        try{
+          let w=img.naturalWidth||img.width,h=img.naturalHeight||img.height;
+          if(!w||!h){reject(new Error('Imagem inválida'));return}
+          if(w>maxDim||h>maxDim){
+            if(w>h){h=Math.round(h*maxDim/w);w=maxDim}
+            else{w=Math.round(w*maxDim/h);h=maxDim}
+          }
+          const canvas=document.createElement('canvas');
+          canvas.width=w;canvas.height=h;
+          const ctx=canvas.getContext('2d');
+          ctx.drawImage(img,0,0,w,h);
+          const dataUrl=canvas.toDataURL('image/jpeg',quality);
+          if(!dataUrl||dataUrl==='data:,'){reject(new Error('Falha ao gerar imagem comprimida'));return}
+          resolve(dataUrl);
+        }catch(err){reject(err)}
+      };
+      img.src=reader.result;
     };
     reader.readAsDataURL(file);
-  })});
-  container.querySelectorAll('.photo-remove-btn').forEach(btn=>{btn.addEventListener('click',()=>{
-    const key=btn.dataset.key;
-    auditResponses[key].photo='';
-    const row=btn.closest('.p-3');
-    row.querySelector('.photo-preview').classList.add('hidden');
-    row.querySelector('.photo-input').value='';
-    btn.classList.add('hidden');
-  })});
-  lucide.createIcons();
+  });
+}
+
+function renderPhotoThumbs(key){
+  const labelBtn=document.querySelector(`.photo-btn[data-key="${cssEscape(key)}"]`);
+  if(!labelBtn)return;
+  const row=labelBtn.closest('.p-3');
+  const wrap=row.querySelector('.photo-thumbs');
+  const label=labelBtn.querySelector('.photo-btn-label');
+  const photos=(auditResponses[key]&&auditResponses[key].photos)||[];
+  label.textContent=`Foto (${photos.length}/3)`;
+  wrap.innerHTML=photos.map((p,i)=>`<div class="relative inline-block"><img src="${p}" class="w-14 h-14 object-cover rounded-lg border"><button type="button" class="photo-remove-btn absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none" data-key="${key}" data-idx="${i}">✕</button></div>`).join('');
+  wrap.querySelectorAll('.photo-remove-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const k=btn.dataset.key;
+      auditResponses[k].photos.splice(parseInt(btn.dataset.idx,10),1);
+      renderPhotoThumbs(k);
+    });
+  });
+  if(photos.length>=3){labelBtn.classList.add('opacity-50','pointer-events-none')}
+  else{labelBtn.classList.remove('opacity-50','pointer-events-none')}
 }
 
 document.getElementById('finish-audit-btn').addEventListener('click',async()=>{
@@ -415,8 +464,8 @@ document.getElementById('finish-audit-btn').addEventListener('click',async()=>{
   const pillarAvgs={};PILLARS.forEach(p=>{pillarAvgs[p]=pillarScores[p].count>0?pillarScores[p].total/pillarScores[p].count:0});
   const typeAvg=keys.length>0?keys.reduce((s,k)=>{const r=auditResponses[k].response;return s+(r==='atende'?100:r==='parcial'?50:0)},0)/keys.length:0;
 
-  const responsesClean={};keys.forEach(k=>{responsesClean[k]={response:auditResponses[k].response,observation:auditResponses[k].observation,photo:auditResponses[k].photo||'',entity_id:auditResponses[k].entity_id}});
-  const photoCount=keys.filter(k=>auditResponses[k].photo).length;
+  const responsesClean={};keys.forEach(k=>{responsesClean[k]={response:auditResponses[k].response,observation:auditResponses[k].observation,photos:auditResponses[k].photos||[],entity_id:auditResponses[k].entity_id}});
+  const photoCount=keys.reduce((sum,k)=>sum+((auditResponses[k].photos||[]).length),0);
   const auditNumber=getAudits().length+1;
   const isCommon=currentAuditData.auditType==='Área Comum';
   const now=new Date();
@@ -569,7 +618,9 @@ function openReport(audit){
         const crit=allData.find(c=>c.type==='criterion'&&c.entity_id===eid);
         const r=responses[k];
         const rL=r.response==='atende'?'✅':r.response==='parcial'?'🟡':'❌';
-        html+=`<div class="p-2 bg-gray-50 rounded text-xs flex justify-between items-center"><span><strong>${crit?crit.item_number:''}</strong> ${crit?crit.question:eid}</span><span>${rL}${r.observation?' · '+r.observation:''}</span></div>`
+        const photos=(r.photos&&r.photos.length)?r.photos:(r.photo?[r.photo]:[]);
+        const thumbs=photos.length?`<div class="flex gap-1 mt-1">${photos.map(p=>`<img src="${p}" class="w-10 h-10 object-cover rounded border">`).join('')}</div>`:'';
+        html+=`<div class="p-2 bg-gray-50 rounded text-xs"><div class="flex justify-between items-center"><span><strong>${crit?crit.item_number:''}</strong> ${crit?crit.question:eid}</span><span>${rL}${r.observation?' · '+r.observation:''}</span></div>${thumbs}</div>`
       });
       html+=`</div>`;
     }
@@ -642,7 +693,8 @@ function generatePDF(audit){
       const crit=allData.find(x=>x.type==='criterion'&&x.entity_id===eid);
       if(!crit)return;
       const r=responses[k];
-      criteriaByPillar[crit.senso].push({item:crit.item_number,question:crit.question,response:r.response,observation:r.observation,photo:r.photo||''});
+      const photos=(r.photos&&r.photos.length)?r.photos:(r.photo?[r.photo]:[]);
+      criteriaByPillar[crit.senso].push({item:crit.item_number,question:crit.question,response:r.response,observation:r.observation,photos});
     });
   }catch(e){console.error('Erro ao processar critérios do PDF:',e)}
 
@@ -678,8 +730,8 @@ body{font-family:'DM Sans',Arial,sans-serif;padding:20px;color:#333;line-height:
 .criteria-item.parcial{border-left-color:#ca8a04;background:#fef9c3}
 .criteria-item.nao{border-left-color:#dc2626;background:#fee2e2}
 .criteria-obs{font-size:8px;color:#666;margin-top:2px;margin-left:16px;padding-left:8px;border-left:2px solid #ddd}
-.criteria-photo{margin-top:6px;margin-left:16px}
-.criteria-photo img{max-width:160px;max-height:120px;border-radius:6px;border:1px solid #ddd;object-fit:cover}
+.criteria-photo{margin-top:6px;margin-left:16px;display:flex;gap:6px;flex-wrap:wrap}
+.criteria-photo img{max-width:150px;max-height:110px;border-radius:6px;border:1px solid #ddd;object-fit:cover}
 .divider{height:1px;background:#e5e7eb;margin:16px 0}
 .footer{margin-top:30px;border-top:1px solid #ddd;padding-top:12px;text-align:center;font-size:8px;color:#999}
 </style></head><body><div class="container">
@@ -701,7 +753,8 @@ ${Object.keys(criteriaByPillar).map(pillar=>{
   return`<div class="criteria-section"><div class="criteria-title">● ${pillar}</div>${items.map(item=>{
     const rClass=item.response==='atende'?'atende':item.response==='parcial'?'parcial':'nao';
     const rLabel=item.response==='atende'?'✅ ATENDE':item.response==='parcial'?'🟡 PARCIAL':'❌ NÃO ATENDE';
-    return`<div class="criteria-item ${rClass}"><span><strong>${item.item}</strong> ${item.question}</span> <strong>${rLabel}</strong>${item.observation?`<div class="criteria-obs"><strong>Observação:</strong> ${item.observation}</div>`:''}${(showPhotos&&item.photo)?`<div class="criteria-photo"><img src="${item.photo}"></div>`:''}</div>`;
+    const photosHtml=(showPhotos&&item.photos&&item.photos.length)?`<div class="criteria-photo">${item.photos.map(p=>`<img src="${p}">`).join('')}</div>`:'';
+    return`<div class="criteria-item ${rClass}"><span><strong>${item.item}</strong> ${item.question}</span> <strong>${rLabel}</strong>${item.observation?`<div class="criteria-obs"><strong>Observação:</strong> ${item.observation}</div>`:''}${photosHtml}</div>`;
   }).join('')}</div>`;
 }).join('')}
 <div class="footer"><p><strong>${empresa}</strong> · Emitido em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</p></div>
