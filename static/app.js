@@ -1791,6 +1791,27 @@ document.getElementById('delete-user-yes-btn').addEventListener('click',async()=
 let manualEditableBackup=null;
 let manualLoadedSavedVersion=false;
 
+const MANUAL_SENSO_TARGETS={
+  'Utilização':'manual-crit-utilizacao',
+  'Limpeza':'manual-crit-limpeza',
+  'Padronização':'manual-crit-padronizacao',
+  'Disciplina':'manual-crit-disciplina',
+};
+
+function renderManualCriteriaLists(){
+  PILLARS.forEach(senso=>{
+    const targetId=MANUAL_SENSO_TARGETS[senso];
+    const el=document.getElementById(targetId);
+    if(!el)return;
+    const items=getCriteria().filter(c=>c.senso===senso).sort((a,b)=>{
+      if((a.checklist||'')!==(b.checklist||''))return (a.checklist||'').localeCompare(b.checklist||'');
+      return (a.item_number||'').localeCompare(b.item_number||'',undefined,{numeric:true});
+    });
+    if(!items.length){el.innerHTML='<p class="manual-criteria-empty">Nenhum critério cadastrado para este senso ainda.</p>';return}
+    el.innerHTML=items.map(c=>`<div class="manual-criteria-item"><span class="num">${c.item_number||'—'}</span><span>${c.question||c.criterion||''}</span><span class="checklist-tag">${c.checklist||''}</span></div>`).join('');
+  });
+}
+
 function renderManualTab(){
   const editBtn=document.getElementById('manual-edit-btn');
   if(!editBtn)return;
@@ -1806,6 +1827,7 @@ function renderManualTab(){
     manualLoadedSavedVersion=true;
     lucide.createIcons();
   }
+  renderManualCriteriaLists();
 }
 
 async function ensureCurrentUserForManual(){
