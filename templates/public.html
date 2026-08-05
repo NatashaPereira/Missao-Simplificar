@@ -218,6 +218,13 @@
     .manual-compare-col.ok .manual-compare-item i{color:#16a34a}
     .manual-compare-col.bad .manual-compare-item i{color:#dc2626}
 
+    .manual-criteria-label{font-size:10.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#8a6d1a;margin-bottom:8px}
+    .manual-criteria-list{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+    .manual-criteria-item{display:flex;align-items:flex-start;gap:10px;background:#fffdf5;border:1px solid #fde68a;border-radius:10px;padding:10px 14px;font-size:12.5px;color:#374151;font-weight:600}
+    .manual-criteria-item .num{flex-shrink:0;background:#D4AF37;color:#fff;font-size:10.5px;font-weight:800;border-radius:6px;padding:2px 7px;min-width:30px;text-align:center}
+    .manual-criteria-item .checklist-tag{flex-shrink:0;font-size:9px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;background:#f3f4f6;border-radius:999px;padding:2px 8px;margin-left:auto}
+    .manual-criteria-empty{font-size:12px;color:#9ca3af;font-style:italic;margin-bottom:16px}
+
     .manual-areas-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
     .manual-area-card{border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;background:#fff}
     .manual-area-head{background:linear-gradient(135deg,#10261D,#1B4332);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:10px;font-weight:800;font-size:13.5px}
@@ -260,24 +267,6 @@
     .manual-final-trophy{font-size:52px;margin-bottom:18px}
     .manual-final h2{font-size:22px;font-weight:900;max-width:560px;margin:0 auto;line-height:1.5}
     .manual-final .gold-underline{width:70px;height:3px;background:#D4AF37;border-radius:3px;margin:22px auto 0}
-  
-
-    /* ===== PÁGINA PÚBLICA ===== */
-    body.public-body{display:flex;flex-direction:column;background:#F8FAF9;height:auto;min-height:100vh;overflow:visible}
-    .public-header{background:linear-gradient(135deg,#10261D,#1B4332);padding:18px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-    .public-header .brand-name{color:#fff;font-weight:800;font-size:17px;letter-spacing:.5px}
-    .public-header .brand-sub{display:block;color:#2F855A;font-size:9px;font-weight:700;letter-spacing:2px;margin-top:2px}
-    .public-badge-tag{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:11px;font-weight:700;padding:6px 14px;border-radius:999px}
-    .public-nav{display:flex;gap:8px;padding:14px 28px;background:#fff;border-bottom:1px solid #E6ECE8;flex-wrap:wrap;position:sticky;top:0;z-index:30}
-    .public-nav-link{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#374151;background:#f3f4f6;padding:9px 18px;border-radius:999px;cursor:pointer;border:1px solid transparent;transition:all .15s}
-    .public-nav-link:hover{background:#e5e7eb}
-    .public-nav-link.active{background:#184D3A;color:#fff;border-color:#58D68D}
-    .public-main{flex:1;padding:24px 28px 60px;max-width:1100px;margin:0 auto;width:100%}
-    .public-tab{display:none}
-    .public-tab.active{display:block}
-    .public-footer{text-align:center;font-size:11px;color:#9ca3af;padding:24px;font-weight:600}
-    @media(max-width:640px){.public-header,.public-nav,.public-main{padding-left:16px;padding-right:16px}}
-
   </style>
 </head>
 <body class="public-body">
@@ -423,6 +412,8 @@
               <div class="manual-section-num">03</div>
               <div><div class="manual-section-title">Senso de Utilização</div><div class="manual-section-sub">Só o necessário, no lugar certo</div></div>
             </div>
+            <p class="manual-criteria-label">Critérios avaliados neste senso</p>
+            <div id="manual-crit-utilizacao" class="manual-criteria-list"></div>
             <div class="manual-compare">
               <div class="manual-compare-col ok">
                 <div class="manual-compare-head">✅ Correto</div>
@@ -447,6 +438,8 @@
               <div class="manual-section-num">04</div>
               <div><div class="manual-section-title">Senso de Limpeza</div><div class="manual-section-sub">Ambiente limpo é ambiente seguro</div></div>
             </div>
+            <p class="manual-criteria-label">Critérios avaliados neste senso</p>
+            <div id="manual-crit-limpeza" class="manual-criteria-list"></div>
             <div class="manual-compare">
               <div class="manual-compare-col ok">
                 <div class="manual-compare-head">✅ Correto</div>
@@ -471,6 +464,8 @@
               <div class="manual-section-num">05</div>
               <div><div class="manual-section-title">Senso de Padronização</div><div class="manual-section-sub">Tudo com identidade visual e nomenclatura únicas</div></div>
             </div>
+            <p class="manual-criteria-label">Critérios avaliados neste senso</p>
+            <div id="manual-crit-padronizacao" class="manual-criteria-list"></div>
             <div class="manual-compare">
               <div class="manual-compare-col ok">
                 <div class="manual-compare-head">✅ Correto</div>
@@ -495,6 +490,8 @@
               <div class="manual-section-num">06</div>
               <div><div class="manual-section-title">Senso de Disciplina</div><div class="manual-section-sub">Manter o padrão todos os dias, não só na verificação</div></div>
             </div>
+            <p class="manual-criteria-label">Critérios avaliados neste senso</p>
+            <div id="manual-crit-disciplina" class="manual-criteria-list"></div>
             <div class="manual-compare">
               <div class="manual-compare-col ok">
                 <div class="manual-compare-head">✅ Correto</div>
