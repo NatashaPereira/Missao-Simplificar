@@ -267,6 +267,29 @@
     .manual-final-trophy{font-size:52px;margin-bottom:18px}
     .manual-final h2{font-size:22px;font-weight:900;max-width:560px;margin:0 auto;line-height:1.5}
     .manual-final .gold-underline{width:70px;height:3px;background:#D4AF37;border-radius:3px;margin:22px auto 0}
+
+    /* ===== LAYOUT DA ÁREA PÚBLICA ===== */
+    body.public-body{display:block!important;min-height:100vh;height:auto!important;overflow:auto!important;background:#F8FAF9;color:#1f2937}
+    .public-header{height:76px;background:#10261D;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 32px;border-bottom:1px solid rgba(255,255,255,.10);position:sticky;top:0;z-index:40}
+    .public-header .brand-name{font-weight:800;font-size:18px;letter-spacing:1px;line-height:1.2}
+    .public-header .brand-sub{display:block;color:#58D68D;font-size:9px;font-weight:700;letter-spacing:2.4px;margin-top:5px}
+    .public-badge-tag{display:inline-flex;align-items:center;padding:7px 13px;border-radius:999px;background:rgba(88,214,141,.12);border:1px solid rgba(88,214,141,.28);color:#d1fae5;font-size:12px;font-weight:700}
+    .public-nav{height:54px;background:#fff;border-bottom:1px solid #E6ECE8;display:flex;align-items:center;justify-content:center;gap:8px;padding:7px 20px;position:sticky;top:76px;z-index:35;box-shadow:0 2px 8px rgba(15,45,34,.04)}
+    .public-nav-link{display:flex;align-items:center;gap:7px;padding:9px 16px;border-radius:9px;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;transition:.18s}
+    .public-nav-link:hover{background:#f0fdf4;color:#166534}
+    .public-nav-link.active{background:#10261D;color:#fff}
+    .public-main{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:26px 0 48px}
+    .public-tab{display:none}
+    .public-tab.active{display:block}
+    .public-main .kpi-card{width:100%}
+    @media(max-width:640px){
+      .public-header{height:auto;min-height:68px;padding:14px 16px;gap:12px}
+      .public-header .brand-name{font-size:15px}
+      .public-badge-tag{font-size:10px;padding:6px 9px}
+      .public-nav{top:68px;height:auto;justify-content:flex-start;overflow-x:auto;padding:7px 10px}
+      .public-nav-link{white-space:nowrap;padding:8px 11px;font-size:11px}
+      .public-main{width:min(100% - 20px,1180px);padding-top:16px}
+    }
   </style>
 </head>
 <body class="public-body">
