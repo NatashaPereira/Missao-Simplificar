@@ -1,5 +1,5 @@
 /* Missão Simplificar — Página Pública (Ranking, Coleção de Selos, Manual do Jogo)
-   Não requer login. Usa /api/public/records, uma versão filtrada e sanitizada
+   Não requer login. Usa /api/public/<empresa>/records, uma versão filtrada e sanitizada
    dos dados (sem fotos de evidência, observações ou nomes de responsáveis). */
 
 lucide.createIcons();
@@ -378,8 +378,17 @@ function renderManualCriteriaLists(){
 
 // ===== CARREGAMENTO INICIAL =====
 async function initPublicPage(){
+  const parts=window.location.pathname.split('/').filter(Boolean);
+  const slug=parts.length>1?parts[1]:'royal-cargo';
   try{
-    const res=await fetch('/api/public/records');
+    const infoRes=await fetch(`/api/public/${encodeURIComponent(slug)}/info`);
+    if(infoRes.ok){
+      const info=await infoRes.json();
+      const nameEl=document.getElementById('public-company-name');
+      if(nameEl)nameEl.textContent=info.name;
+      document.title=`Missão Simplificar - ${info.name}`;
+    }
+    const res=await fetch(`/api/public/${encodeURIComponent(slug)}/records`);
     allData=await res.json();
   }catch(e){
     console.error('Erro ao carregar dados públicos:',e);

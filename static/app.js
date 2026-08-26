@@ -1009,7 +1009,7 @@ body{font-family:'DM Sans',Arial,sans-serif;color:#1f2937;line-height:1.35;font-
     <div class="badges-grid">${badgesHtml}</div>
   </div>
 
-  <div class="footer"><span>${empresa} · Missão Simplificar · Verificações 5S</span><span>Gerado automaticamente em ${new Date().toLocaleDateString('pt-BR')}</span></div>
+  <div class="footer"><span>${empresa} · Semana ODS na Prática · Em apoio ao ODS 12 e ao ODS 18</span><span>Gerado automaticamente em ${new Date().toLocaleDateString('pt-BR')}</span></div>
 </div>
 
 <div class="page page-break">
@@ -1265,7 +1265,7 @@ body{font-family:'DM Sans',Arial,sans-serif;color:#1f2937;line-height:1.35;font-
   <div class="badges-grid">${badgesHtml}</div>
 </div>
 
-<div class="footer"><span>${empresa} · Missão Simplificar · Verificações 5S</span><span>Gerado automaticamente em ${new Date().toLocaleDateString('pt-BR')}</span></div>
+<div class="footer"><span>${empresa} · Semana ODS na Prática · Em apoio ao ODS 12 e ao ODS 18</span><span>Gerado automaticamente em ${new Date().toLocaleDateString('pt-BR')}</span></div>
 </div></body></html>`;
 
   const blob=new Blob([html],{type:'text/html'});
@@ -1560,11 +1560,46 @@ async function loadCurrentUserInfo(){
     if(!res.ok)return null;
     currentUserInfo=await res.json();
     renderSidebarUserCard();
+    renderCompanySwitcher();
+    updatePublicLink();
     if(typeof renderReports==='function'&&document.getElementById('reports-list'))renderReports();
     return currentUserInfo;
   }catch(e){return null}
 }
 loadCurrentUserInfo();
+
+
+function renderCompanySwitcher(){
+  const sel=document.getElementById('company-switcher');
+  if(!sel||!currentUserInfo)return;
+  if(!currentUserInfo.isSuperAdmin){sel.classList.add('hidden');return}
+  const companies=currentUserInfo.companies||[];
+  sel.innerHTML=companies.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  if(currentUserInfo.companyId)sel.value=String(currentUserInfo.companyId);
+  sel.classList.remove('hidden');
+  if(!sel.dataset.bound){
+    sel.dataset.bound='1';
+    sel.addEventListener('change',async()=>{
+      sel.disabled=true;
+      try{
+        const res=await fetch('/api/company/switch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({company_id:sel.value})});
+        const data=await res.json();
+        if(!res.ok||data.isError){alert(data.message||'Não foi possível trocar a empresa.');return}
+        cachedUserNames=null;
+        await loadCurrentUserInfo();
+        await reloadAllData();
+        if(document.getElementById('tab-configuracoes').classList.contains('active')){await renderUsersSection();await renderActivityLogSection()}
+      }finally{sel.disabled=false}
+    });
+  }
+}
+
+function updatePublicLink(){
+  const input=document.getElementById('public-link-input');
+  if(!input||!currentUserInfo)return;
+  const path=currentUserInfo.publicUrl||'/publico/royal-cargo';
+  input.value=window.location.origin+path;
+}
 
 function renderSidebarUserCard(){
   if(!currentUserInfo)return;
@@ -1574,7 +1609,8 @@ function renderSidebarUserCard(){
   if(!avatar)return;
   avatar.innerHTML=currentUserInfo.photo?`<img src="${currentUserInfo.photo}">`:'<i data-lucide="user" class="w-5 h-5"></i>';
   nameEl.textContent=currentUserInfo.department||currentUserInfo.name||currentUserInfo.email||'—';
-  roleEl.textContent=currentUserInfo.isAdmin?'Administrador':'Responsável pela Verificação';
+  roleEl.textContent=currentUserInfo.isSuperAdmin?'Superadministrador':(currentUserInfo.isAdmin?'Administrador':'Responsável pela Verificação');
+  if(currentUserInfo.company&&currentUserInfo.company.name){nameEl.textContent=(currentUserInfo.department?currentUserInfo.department+' · ':'')+currentUserInfo.company.name}
   lucide.createIcons();
 }
 const sidebarUserCardEl=document.getElementById('sidebar-user-card');
@@ -1629,12 +1665,14 @@ function renderUsersTable(){
   empty.classList.add('hidden');
   tbody.innerHTML=cachedUsers.map(u=>{
     const avatar=u.photo?`<img src="${u.photo}" class="user-avatar">`:`<div class="user-avatar"><i data-lucide="user" class="w-4 h-4"></i></div>`;
-    const profileLabel=u.profile==='admin'?'Administrador':'Responsável pela Verificação';
+    const profileLabel=u.profile==='super_admin'?'Superadministrador':(u.profile==='admin'?'Administrador':'Responsável pela Verificação');
     const statusLabel=u.status==='inactive'?'Inativo':'Ativo';
     const isSelf=currentUserInfo&&String(currentUserInfo.email).toLowerCase()===String(u.email).toLowerCase();
+    const isFixedSuper=u.profile==='super_admin';
     return `<tr class="border-b border-gray-50" data-user-id="${u.id}">
       <td class="p-2">${avatar}</td>
       <td class="p-2 font-semibold text-gray-800">${u.name||'—'}${isSelf?' <span class=\"text-[10px] text-gray-400\">(você)</span>':''}</td>
+      <td class="p-2 text-gray-600">${u.company_name||'Todas'}</td>
       <td class="p-2 text-gray-600">${u.department||'—'}</td>
       <td class="p-2 text-gray-600">${u.email}</td>
       <td class="p-2"><span class="profile-pill">${profileLabel}</span></td>
@@ -1642,20 +1680,59 @@ function renderUsersTable(){
       <td class="p-2 text-gray-500 text-xs">${formatLastAccess(u.last_access)}</td>
       <td class="p-2">
         <div class="flex gap-1 flex-wrap">
-          <button type="button" class="user-edit-btn text-blue-600 hover:text-blue-800" title="Editar" data-id="${u.id}"><i data-lucide="pencil" class="w-4 h-4"></i></button>
-          <button type="button" class="user-reset-btn text-amber-600 hover:text-amber-800" title="Resetar senha" data-id="${u.id}"><i data-lucide="key-round" class="w-4 h-4"></i></button>
-          <button type="button" class="user-toggle-btn text-gray-500 hover:text-gray-700" title="${u.status==='inactive'?'Ativar':'Inativar'}" data-id="${u.id}"><i data-lucide="${u.status==='inactive'?'toggle-left':'toggle-right'}" class="w-4 h-4"></i></button>
-          <button type="button" class="user-delete-btn text-red-600 hover:text-red-800" title="Excluir" data-id="${u.id}" ${isSelf?'disabled style="opacity:.3;cursor:not-allowed"':''}><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+          <button type="button" class="user-edit-btn text-blue-600 hover:text-blue-800" title="Editar" data-id="${u.id}" ${isFixedSuper?'disabled style="opacity:.3;cursor:not-allowed"':''}><i data-lucide="pencil" class="w-4 h-4"></i></button>
+          <button type="button" class="user-reset-btn text-amber-600 hover:text-amber-800" title="Resetar senha" data-id="${u.id}" ${isFixedSuper?'disabled style="opacity:.3;cursor:not-allowed"':''}><i data-lucide="key-round" class="w-4 h-4"></i></button>
+          <button type="button" class="user-toggle-btn text-gray-500 hover:text-gray-700" title="${u.status==='inactive'?'Ativar':'Inativar'}" data-id="${u.id}" ${isFixedSuper?'disabled style="opacity:.3;cursor:not-allowed"':''}><i data-lucide="${u.status==='inactive'?'toggle-left':'toggle-right'}" class="w-4 h-4"></i></button>
+          <button type="button" class="user-delete-btn text-red-600 hover:text-red-800" title="Excluir" data-id="${u.id}" ${isSelf||isFixedSuper?'disabled style="opacity:.3;cursor:not-allowed"':''}><i data-lucide="trash-2" class="w-4 h-4"></i></button>
         </div>
       </td>
     </tr>`;
   }).join('');
   lucide.createIcons();
 
-  tbody.querySelectorAll('.user-edit-btn').forEach(btn=>btn.addEventListener('click',()=>openUserForm(cachedUsers.find(u=>String(u.id)===btn.dataset.id))));
-  tbody.querySelectorAll('.user-reset-btn').forEach(btn=>btn.addEventListener('click',()=>openResetPasswordModal(cachedUsers.find(u=>String(u.id)===btn.dataset.id))));
-  tbody.querySelectorAll('.user-toggle-btn').forEach(btn=>btn.addEventListener('click',()=>toggleUserStatus(cachedUsers.find(u=>String(u.id)===btn.dataset.id))));
+  tbody.querySelectorAll('.user-edit-btn').forEach(btn=>btn.addEventListener('click',()=>{if(!btn.disabled)openUserForm(cachedUsers.find(u=>String(u.id)===btn.dataset.id))}));
+  tbody.querySelectorAll('.user-reset-btn').forEach(btn=>btn.addEventListener('click',()=>{if(!btn.disabled)openResetPasswordModal(cachedUsers.find(u=>String(u.id)===btn.dataset.id))}));
+  tbody.querySelectorAll('.user-toggle-btn').forEach(btn=>btn.addEventListener('click',()=>{if(!btn.disabled)toggleUserStatus(cachedUsers.find(u=>String(u.id)===btn.dataset.id))}));
   tbody.querySelectorAll('.user-delete-btn').forEach(btn=>btn.addEventListener('click',()=>{if(!btn.disabled)openDeleteUserConfirm(cachedUsers.find(u=>String(u.id)===btn.dataset.id))}));
+}
+
+
+function populateUserCompanySelect(selected){
+  const wrap=document.getElementById('user-company-wrap');
+  const sel=document.getElementById('user-company');
+  if(!wrap||!sel||!currentUserInfo)return;
+  const companies=currentUserInfo.companies||[];
+  sel.innerHTML=companies.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  const target=selected||currentUserInfo.companyId;
+  if(target)sel.value=String(target);
+  wrap.classList.toggle('hidden',!currentUserInfo.isSuperAdmin);
+}
+
+const COMPANY_DOMAIN_HINTS={
+  'royalcargo.com.br':'royal-cargo',
+  'amtrans.com.br':'amtrans',
+  'dclogistics.com.br':'dc-logistics',
+  'dc-logistics.com.br':'dc-logistics',
+  'rentalog.com.br':'rentalog',
+  'next.com.br':'next',
+  'nextlog.com.br':'next',
+  'nextshipping.com.br':'next'
+};
+
+function suggestCompanyFromEmail(email){
+  if(!currentUserInfo||!currentUserInfo.isSuperAdmin)return;
+  const sel=document.getElementById('user-company');
+  const hint=document.getElementById('user-company-suggestion');
+  if(!sel||!hint)return;
+  const value=String(email||'').trim().toLowerCase();
+  const domain=value.includes('@')?value.split('@').pop():'';
+  const slug=COMPANY_DOMAIN_HINTS[domain];
+  if(!slug){hint.classList.add('hidden');hint.textContent='';return;}
+  const company=(currentUserInfo.companies||[]).find(c=>c.slug===slug);
+  if(!company){hint.classList.add('hidden');hint.textContent='';return;}
+  sel.value=String(company.id);
+  hint.textContent=`Empresa sugerida pelo domínio do e-mail: ${company.name}`;
+  hint.classList.remove('hidden');
 }
 
 function populateUserDeptSelect(selected){
@@ -1666,6 +1743,7 @@ function populateUserDeptSelect(selected){
 }
 
 function openUserForm(user){
+  populateUserCompanySelect(user?user.company_id:null);
   populateUserDeptSelect(user?user.department:'');
   document.getElementById('user-form-error').classList.add('hidden');
   document.getElementById('user-edit-id').value=user?user.id:'';
@@ -1673,6 +1751,7 @@ function openUserForm(user){
   document.getElementById('user-name').value=user?user.name||'':'';
   document.getElementById('user-email').value=user?user.email||'':'';
   document.getElementById('user-email').disabled=!!user;
+  if(!user)suggestCompanyFromEmail(document.getElementById('user-email').value);
   document.getElementById('user-role').value=user?user.role||'':'';
   document.querySelector(`input[name="user-profile"][value="${user&&user.profile==='admin'?'admin':'auditor'}"]`).checked=true;
   document.querySelector(`input[name="user-status"][value="${user&&user.status==='inactive'?'inactive':'active'}"]`).checked=true;
@@ -1694,6 +1773,7 @@ function openUserForm(user){
 }
 document.getElementById('add-user-btn').addEventListener('click',()=>openUserForm(null));
 document.getElementById('cancel-user').addEventListener('click',()=>document.getElementById('user-modal').classList.remove('show'));
+document.getElementById('user-email').addEventListener('input',(e)=>suggestCompanyFromEmail(e.target.value));
 
 document.getElementById('user-photo-input').addEventListener('change',async(e)=>{
   const file=e.target.files[0];if(!file)return;
@@ -1717,6 +1797,7 @@ document.getElementById('user-form').addEventListener('submit',async(e)=>{
     profile:document.querySelector('input[name="user-profile"]:checked').value,
     status:document.querySelector('input[name="user-status"]:checked').value,
     photo:document.getElementById('user-photo-data').value,
+    company_id:document.getElementById('user-company')?document.getElementById('user-company').value:null,
   };
   let url='/api/users',method='POST';
   if(editId){url=`/api/users/${editId}`;method='PUT'}
@@ -1759,7 +1840,7 @@ async function toggleUserStatus(user){
   const newStatus=user.status==='inactive'?'active':'inactive';
   try{
     const res=await fetch(`/api/users/${user.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      name:user.name,department:user.department,role:user.role,profile:user.profile,status:newStatus
+      name:user.name,department:user.department,role:user.role,profile:user.profile,status:newStatus,company_id:user.company_id
     })});
     const data=await res.json();
     if(!res.ok||data.isError){alert(data.message||'Erro ao atualizar status.');return}
@@ -1891,7 +1972,7 @@ document.getElementById('manual-print-btn').addEventListener('click',()=>{
   const input=document.getElementById('public-link-input');
   const btn=document.getElementById('copy-public-link-btn');
   if(!input||!btn)return;
-  input.value=window.location.origin+'/publico';
+  if(currentUserInfo)updatePublicLink();
   btn.addEventListener('click',async()=>{
     try{
       await navigator.clipboard.writeText(input.value);
