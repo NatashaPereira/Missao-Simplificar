@@ -1,0 +1,1116 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Missão Simplificar - Verificações 5S</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <style>
+    *{box-sizing:border-box}
+    html,body{width:100%;margin:0;padding:0;font-family:'DM Sans',sans-serif}
+    body{display:flex;background:#F8FAF9;height:100vh;overflow:hidden}
+    .app-wrapper{display:flex;width:100%;height:100%;flex-direction:row}
+    .sidebar{width:240px;height:100%;background:#10261D;display:flex;flex-direction:column;flex-shrink:0;z-index:40;overflow-y:auto;overflow-x:hidden;transition:transform .3s;scrollbar-width:thin;scrollbar-color:#2D6A4F transparent}
+    @media(max-width:1024px){.sidebar{width:200px}}
+    @media(max-width:768px){.sidebar{width:180px}}
+    @media(max-width:480px){.sidebar{width:160px}}
+    .sidebar::-webkit-scrollbar{width:6px}
+    .sidebar::-webkit-scrollbar-track{background:transparent}
+    .sidebar::-webkit-scrollbar-thumb{background:#2D6A4F;border-radius:3px}
+    .sidebar-logo-area{display:flex;align-items:center;justify-content:center;border-bottom:1px solid rgba(255,255,255,.1);padding:16px 12px}
+    .sidebar-logo-area .brand-name{color:#fff;font-weight:800;font-size:16px;letter-spacing:1px;text-align:center;line-height:1.3}
+    .sidebar-logo-area .brand-sub{display:block;color:#2F855A;font-size:9px;font-weight:600;letter-spacing:2px;margin-top:2px}
+    .main-area{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;background:#F8FAF9}
+    .main-area header{flex-shrink:0}
+    .main-content{flex:1;overflow-y:auto;overflow-x:hidden;padding:16px 20px 96px}
+    .audit-actions{
+      position:sticky;
+      bottom:0;
+      background:#fff;
+      padding:12px 0 calc(12px + env(safe-area-inset-bottom));
+      margin:12px 0 0;
+      box-shadow:0 -8px 18px -10px rgba(0,0,0,.28);
+      z-index:30;
+    }
+    @media(max-width:768px){
+      .main-content{padding:12px 16px 120px}
+      .audit-actions{
+        bottom:0;
+        margin-left:-16px;
+        margin-right:-16px;
+        padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+        gap:8px;
+      }
+      .audit-actions button{
+        min-height:44px;
+        white-space:normal;
+        line-height:1.2;
+      }
+    }
+    #tab-relatorios{padding:0}
+    #rel-type-selector.hidden{display:none !important}
+    #rel-filters-section{display:none}
+    #rel-filters-section.show{display:block !important}
+    .nav-link{display:flex;align-items:center;gap:12px;padding:10px 16px;margin:4px 8px;color:rgba(255,255,255,.75);font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;border-left:4px solid transparent;border-radius:6px;white-space:nowrap;height:40px}
+    @media(max-width:480px){.nav-link{gap:8px;padding:6px 10px;font-size:11px;height:34px;margin:2px 4px}}
+    .nav-link:hover{color:#fff;background:#245641}
+    .nav-link.active{color:#fff;background:#184D3A;border-left-color:#58D68D;font-weight:600}
+    .tab-content{display:none}
+    .tab-content.active{display:block}
+    .kpi-card{background:#fff;border:1px solid #E6ECE8;border-radius:14px;padding:20px;box-shadow:0 4px 20px rgba(15,45,34,0.06);transition:transform .2s,box-shadow .2s}
+    .kpi-card:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.07)}
+    .hero-section{position:relative;border-radius:16px;overflow:hidden;min-height:160px;display:flex;align-items:center;flex-shrink:0;background:linear-gradient(135deg,#10261D,#1B4332)}
+    @media(max-width:768px){.hero-section{min-height:120px;border-radius:12px}}
+    .hero-content{position:relative;z-index:3;width:100%;padding:24px 32px}
+    @media(max-width:768px){.hero-content{padding:20px 16px}}
+    .donut-ring{transition:stroke-dasharray .6s ease,stroke .4s ease}
+    .response-btn{transition:all .15s;cursor:pointer}
+    .response-btn.sel-atende{background:#dcfce7;border-color:#16a34a;color:#16a34a}
+    .response-btn.sel-parcial{background:#fef9c3;border-color:#ca8a04;color:#ca8a04}
+    .response-btn.sel-nao{background:#fee2e2;border-color:#dc2626;color:#dc2626}
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:50;align-items:center;justify-content:center;padding:1rem;overflow-y:auto}
+    .modal-overlay.show{display:flex}
+    @media(max-width:1023px){.sidebar{position:fixed;transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}}
+    @media print{.no-print{display:none!important}.sidebar{display:none!important}.main-content{overflow:visible}}
+
+    /* ===== SELOS ===== */
+    .selos-header{background:linear-gradient(135deg,#10261D,#1B4332);border-radius:16px;padding:22px 24px;color:#fff}
+    .selos-progress-track{background:rgba(255,255,255,.15);border-radius:999px;height:10px;overflow:hidden;margin:10px 0}
+    .selos-progress-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#2D6A4F,#58D68D);transition:width .5s ease}
+    .selos-level-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:5px 14px;font-weight:700;font-size:13px}
+    .selo-category-block{margin-top:22px}
+    .selo-category-head{display:flex;align-items:center;justify-content:between;gap:10px;margin-bottom:10px}
+    .selo-category-title{font-weight:800;font-size:15px;color:#1f2937;display:flex;align-items:center;gap:8px}
+    .selo-category-count{font-size:12px;font-weight:700;color:#6b7280;margin-left:auto}
+    .selo-category-track{background:#f1f5f9;border-radius:999px;height:6px;overflow:hidden;margin:6px 0 14px}
+    .selo-category-fill{height:100%;border-radius:999px;background:#16a34a}
+    .selo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px}
+    .selo-card{background:#fff;border:2px solid #E6ECE8;border-radius:14px;padding:16px 10px;text-align:center;cursor:pointer;box-shadow:0 4px 20px rgba(15,45,34,0.06);transition:transform .15s,box-shadow .15s;position:relative}
+    .selo-card.tier-bronze{border-color:#cd7f32;box-shadow:0 2px 10px rgba(205,127,50,.18)}
+    .selo-card.tier-prata{border-color:#a8adb4;box-shadow:0 2px 10px rgba(168,173,180,.2)}
+    .selo-card.tier-ouro{border-color:#C9A227;box-shadow:0 2px 10px rgba(201,162,39,.22)}
+    .selo-card.tier-diamante{border-color:#4FC3F7;overflow:hidden;background:linear-gradient(135deg,#fff,#f0faff);animation:diamondGlow 2.4s ease-in-out infinite}
+    .selo-card.tier-diamante::after{content:'';position:absolute;top:0;left:-150%;width:55%;height:100%;background:linear-gradient(115deg,transparent,rgba(255,255,255,.85),rgba(186,230,253,.6),transparent);transform:skewX(-20deg);animation:diamondShine 2.8s ease-in-out infinite;pointer-events:none}
+    @keyframes diamondGlow{0%,100%{box-shadow:0 0 0 1px rgba(79,195,247,.25),0 3px 10px rgba(79,195,247,.2)}50%{box-shadow:0 0 0 3px rgba(79,195,247,.55),0 6px 22px rgba(79,195,247,.4)}}
+    @keyframes diamondShine{0%{left:-150%}55%,100%{left:150%}}
+    .selo-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.09)}
+    .selo-medal{width:64px;height:64px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:30px;background:linear-gradient(135deg,#e9d189,#D4AF37);box-shadow:inset 0 -4px 0 rgba(0,0,0,.12),0 3px 10px rgba(212,175,55,.35);border:3px solid transparent}
+    .selo-card.locked .selo-medal{background:#e5e7eb;filter:grayscale(1);opacity:.75;border-color:transparent}
+    .selo-medal.tier-bronze{border-color:#cd7f32;box-shadow:inset 0 -4px 0 rgba(0,0,0,.12),0 0 0 3px rgba(205,127,50,.25),0 3px 8px rgba(0,0,0,.12)}
+    .selo-medal.tier-prata{border-color:#a8adb4;box-shadow:inset 0 -4px 0 rgba(0,0,0,.12),0 0 0 3px rgba(168,173,180,.28),0 3px 8px rgba(0,0,0,.12)}
+    .selo-medal.tier-ouro{border-color:#C9A227;box-shadow:inset 0 -4px 0 rgba(0,0,0,.12),0 0 0 3px rgba(201,162,39,.3),0 3px 8px rgba(0,0,0,.12)}
+    .selo-medal.tier-diamante{border-color:#4FC3F7;box-shadow:inset 0 -4px 0 rgba(0,0,0,.12),0 0 0 3px rgba(79,195,247,.3),0 3px 8px rgba(0,0,0,.12)}
+    .tier-badge-label{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:800;padding:2px 8px;border-radius:999px;margin-top:2px}
+    .tier-badge-label.tier-bronze{background:#fdf1e7;color:#a8632a}
+    .tier-badge-label.tier-prata{background:#f1f2f4;color:#71767d}
+    .tier-badge-label.tier-ouro{background:#fef6e0;color:#a87400}
+    .tier-badge-label.tier-diamante{background:#e6f7fd;color:#0284a3}
+    .selo-card.locked .selo-name{color:#9ca3af}
+    .selo-card.locked{opacity:.85}
+    .selo-lock-badge{position:absolute;top:8px;right:8px;background:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.15);font-size:11px}
+    .selo-name{font-weight:700;font-size:12.5px;color:#1f2937;line-height:1.25;margin-bottom:4px}
+    .selo-stars{font-size:10px;letter-spacing:1px;color:#D4AF37}
+    .selo-tier-chip{position:absolute;top:8px;left:8px;font-size:13px}
+    .selo-modal-medal{width:110px;height:110px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:52px;background:linear-gradient(135deg,#e9d189,#D4AF37);box-shadow:inset 0 -6px 0 rgba(0,0,0,.12),0 4px 16px rgba(212,175,55,.35);border:4px solid transparent}
+    .selo-modal-medal.tier-bronze{border-color:#cd7f32}
+    .selo-modal-medal.tier-prata{border-color:#a8adb4}
+    .selo-modal-medal.tier-ouro{border-color:#C9A227}
+    .selo-modal-medal.tier-diamante{border-color:#4FC3F7}
+    .selo-modal-medal.locked{background:#e5e7eb;filter:grayscale(1)}
+    .selo-modal-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid #f1f5f9;font-size:13px}
+    .selo-modal-row .label{color:#6b7280;font-weight:600}
+    .selo-modal-row .value{font-weight:800;color:#1f2937}
+    .user-avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;background:#e5e7eb;display:flex;align-items:center;justify-content:center;color:#9ca3af}
+    .status-pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:700}
+    .status-pill.active{background:#dcfce7;color:#16a34a}
+    .status-pill.inactive{background:#f3f4f6;color:#6b7280}
+    .profile-pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:700;background:#eef2ff;color:#4f46e5}
+
+    /* ===== SIDEBAR USER CARD ===== */
+    .sidebar-user-card{position:relative;margin:8px;padding:10px;border-radius:12px;background:#173629;display:flex;align-items:center;gap:10px;cursor:pointer;flex-shrink:0}
+    .sidebar-user-card:hover{background:#245641}
+    .sidebar-user-avatar{width:38px;height:38px;border-radius:50%;flex-shrink:0;background:#1B4332;color:#58D68D;display:flex;align-items:center;justify-content:center;overflow:hidden;font-weight:800;font-size:14px}
+    .sidebar-user-avatar img{width:100%;height:100%;object-fit:cover}
+    .sidebar-user-name{color:#fff;font-weight:700;font-size:13px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .sidebar-user-role{color:rgba(255,255,255,.55);font-size:11px;line-height:1.2}
+    .sidebar-user-caret{color:rgba(255,255,255,.5);transition:transform .15s}
+    .sidebar-user-card.open .sidebar-user-caret{transform:rotate(180deg)}
+    .sidebar-user-menu{display:none;position:absolute;bottom:calc(100% + 6px);left:8px;right:8px;background:#fff;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);overflow:hidden;z-index:20}
+    .sidebar-user-card.open .sidebar-user-menu{display:block}
+    .sidebar-user-menu-item{display:flex;align-items:center;gap:8px;padding:10px 14px;font-size:13px;font-weight:600;color:#374151;text-decoration:none}
+    .sidebar-user-menu-item:hover{background:#f3f4f6}
+
+    /* ===== HEADER PILLS ===== */
+    .header-pill-select{border:1px solid #e5e7eb;border-radius:999px;padding:9px 16px;font-size:12.5px;font-weight:700;background:#fff;color:#374151;outline:none;cursor:pointer}
+    .header-pill-select:focus{box-shadow:0 0 0 3px rgba(22,163,74,.12);border-color:#16a34a}
+    .header-pdf-btn{display:flex;align-items:center;gap:8px;padding:10px 18px;border-radius:10px;background:#10261D;color:#fff;font-size:12.5px;font-weight:700;border:none;cursor:pointer;transition:background .15s}
+    .header-pdf-btn:hover{background:#245641}
+
+    /* ===== HERO / NÍVEL ===== */
+    .hero-trophy-wrap{position:relative;width:120px;height:120px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+    .hero-trophy-emoji{font-size:76px;filter:drop-shadow(0 8px 14px rgba(0,0,0,.35));animation:trophyFloat 3.2s ease-in-out infinite}
+    @keyframes trophyFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+    .hero-sparkle{position:absolute;font-size:16px;opacity:.85;animation:sparkleTwinkle 1.8s ease-in-out infinite}
+    .hero-level-card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:14px 18px;min-width:220px;flex-shrink:0}
+    .hero-level-label{font-size:10px;font-weight:800;letter-spacing:1.5px;color:rgba(255,255,255,.55)}
+    .hero-level-name{display:flex;align-items:center;gap:8px;font-size:22px;font-weight:900;color:#fff;margin-top:2px}
+    .hero-xp-track{background:rgba(255,255,255,.15);border-radius:999px;height:8px;overflow:hidden;margin-top:10px}
+    .hero-xp-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#C9A227,#D4AF37)}
+    .hero-xp-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.75);margin-top:5px}
+    .hero-next-level{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#7dd3fc;margin-top:10px}
+    @keyframes sparkleTwinkle{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.1)}}
+
+    /* ===== EVOLUÇÃO CHART ===== */
+    .evo-card{background:#fff;border:1px solid #f0f0f0;border-radius:14px;padding:16px;box-shadow:0 1px 8px rgba(0,0,0,.04)}
+    .evo-title{font-size:9px;font-weight:800;letter-spacing:1.5px;color:#6b7280;text-transform:uppercase;margin-bottom:8px}
+    .icon-chip{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+    /* ===== MANUAL DO JOGO ===== */
+    .manual-cover{position:relative;border-radius:20px;overflow:hidden;background:linear-gradient(160deg,#10261D 0%,#173629 55%,#1B4332 100%);padding:56px 40px;text-align:center;color:#fff;margin-bottom:28px}
+    .manual-cover::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 20% 20%,rgba(245,179,1,.12),transparent 40%),radial-gradient(circle at 85% 80%,rgba(74,222,128,.12),transparent 45%)}
+    .manual-cover-inner{position:relative;z-index:2}
+    .manual-kicker{display:inline-flex;align-items:center;gap:8px;background:rgba(245,179,1,.15);border:1px solid rgba(245,179,1,.4);color:#fbbf24;padding:6px 16px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:22px}
+    .manual-cover h1{font-size:38px;font-weight:900;letter-spacing:.5px;margin-bottom:10px}
+    .manual-cover p{font-size:15px;color:rgba(255,255,255,.7);font-weight:500;max-width:480px;margin:0 auto}
+    .manual-cover-divider{width:56px;height:3px;background:#D4AF37;border-radius:3px;margin:24px auto}
+
+    .manual-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px;position:sticky;top:0;background:#fff;z-index:5;padding:10px 0}
+    .manual-nav-pill{font-size:11.5px;font-weight:700;color:#374151;background:#f3f4f6;border:1px solid #e5e7eb;padding:7px 14px;border-radius:999px;cursor:pointer;transition:all .15s;text-decoration:none}
+    .manual-nav-pill:hover{background:#10261D;color:#fff;border-color:#10261D}
+
+    .manual-toolbar{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-bottom:14px}
+    .manual-tool-btn{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:#374151;background:#fff;border:1px solid #e5e7eb;padding:8px 14px;border-radius:8px;cursor:pointer;transition:all .15s}
+    .manual-tool-btn:hover{background:#f3f4f6}
+    .manual-tool-btn.primary{background:#10261D;color:#fff;border-color:#10261D}
+    .manual-tool-btn.primary:hover{background:#245641}
+    .manual-tool-btn.hidden{display:none}
+    #manual-editable.editing{outline:2px dashed #58D68D;outline-offset:8px;border-radius:12px}
+    #manual-editable.editing [contenteditable="true"]:hover{background:rgba(88,214,141,.08);outline:1px dashed rgba(88,214,141,.5);border-radius:4px}
+    #manual-editable.editing [contenteditable="true"]:focus{background:rgba(88,214,141,.12);outline:1.5px solid #2D6A4F;border-radius:4px}
+
+    @media print{
+      body *{visibility:hidden}
+      #tab-manual, #tab-manual *{visibility:visible}
+      #tab-manual{position:absolute;left:0;top:0;width:100%;padding:0}
+      #tab-manual .no-print{display:none !important}
+      .manual-section{page-break-inside:avoid}
+      @page{size:A4;margin:12mm}
+    }
+
+    .manual-section{margin-bottom:40px;scroll-margin-top:60px}
+    .manual-section-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+    .manual-section-num{width:40px;height:40px;border-radius:12px;background:#10261D;color:#D4AF37;font-weight:900;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .manual-section-title{font-size:21px;font-weight:900;color:#10261D;letter-spacing:.2px}
+    .manual-section-sub{font-size:12.5px;color:#6b7280;font-weight:600;margin-top:2px}
+    .manual-prose{font-size:13.5px;color:#4b5563;line-height:1.7;margin-bottom:18px;max-width:760px}
+    .manual-prose strong{color:#1f2937}
+
+    .manual-flow{display:flex;align-items:center;flex-wrap:wrap;gap:0;background:#fafafa;border:1px solid #f0f0f0;border-radius:16px;padding:26px 20px;margin-bottom:8px}
+    .manual-flow-step{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1;min-width:110px;text-align:center}
+    .manual-flow-icon{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#10261D,#1B4332);color:#D4AF37;display:flex;align-items:center;justify-content:center}
+    .manual-flow-label{font-size:11.5px;font-weight:800;color:#1f2937}
+    .manual-flow-arrow{color:#d1d5db;flex-shrink:0;padding:0 4px}
+
+    .manual-score-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:8px}
+    .manual-score-card{border-radius:16px;padding:22px;text-align:center;border:2px solid}
+    .manual-score-card.atende{background:#f0fdf4;border-color:#16a34a}
+    .manual-score-card.parcial{background:#fefce8;border-color:#ca8a04}
+    .manual-score-card.nao{background:#fef2f2;border-color:#dc2626}
+    .manual-score-icon{font-size:34px;margin-bottom:10px}
+    .manual-score-title{font-size:15px;font-weight:900;letter-spacing:.5px;margin-bottom:6px}
+    .manual-score-card.atende .manual-score-title{color:#16a34a}
+    .manual-score-card.parcial .manual-score-title{color:#ca8a04}
+    .manual-score-card.nao .manual-score-title{color:#dc2626}
+    .manual-score-desc{font-size:11.5px;color:#4b5563;line-height:1.5}
+
+    .manual-compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:8px}
+    @media(max-width:640px){.manual-compare{grid-template-columns:1fr}}
+    .manual-compare-col{border-radius:16px;padding:18px 20px;border:1px solid}
+    .manual-compare-col.ok{background:#f0fdf4;border-color:#bbf7d0}
+    .manual-compare-col.bad{background:#fef2f2;border-color:#fecaca}
+    .manual-compare-head{display:flex;align-items:center;gap:8px;font-weight:900;font-size:13px;margin-bottom:12px;letter-spacing:.3px}
+    .manual-compare-col.ok .manual-compare-head{color:#16a34a}
+    .manual-compare-col.bad .manual-compare-head{color:#dc2626}
+    .manual-compare-item{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:#374151;font-weight:600;padding:7px 0;border-top:1px solid rgba(0,0,0,.05)}
+    .manual-compare-item:first-child{border-top:none}
+    .manual-compare-item i{flex-shrink:0;margin-top:1px}
+    .manual-compare-col.ok .manual-compare-item i{color:#16a34a}
+    .manual-compare-col.bad .manual-compare-item i{color:#dc2626}
+
+    .manual-criteria-label{font-size:10.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#8a6d1a;margin-bottom:8px}
+    .manual-criteria-list{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+    .manual-criteria-item{display:flex;align-items:flex-start;gap:10px;background:#fffdf5;border:1px solid #fde68a;border-radius:10px;padding:10px 14px;font-size:12.5px;color:#374151;font-weight:600}
+    .manual-criteria-item .num{flex-shrink:0;background:#D4AF37;color:#fff;font-size:10.5px;font-weight:800;border-radius:6px;padding:2px 7px;min-width:30px;text-align:center}
+    .manual-criteria-item .checklist-tag{flex-shrink:0;font-size:9px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;background:#f3f4f6;border-radius:999px;padding:2px 8px;margin-left:auto}
+    .manual-criteria-empty{font-size:12px;color:#9ca3af;font-style:italic;margin-bottom:16px}
+
+    .manual-areas-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+    .manual-area-card{border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;background:#fff}
+    .manual-area-head{background:linear-gradient(135deg,#10261D,#1B4332);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:10px;font-weight:800;font-size:13.5px}
+    .manual-area-body{padding:16px 18px}
+
+    .manual-station{border:1px solid #e5e7eb;border-radius:18px;padding:28px;background:radial-gradient(circle at 50% 30%,#fafafa,#fff)}
+    .manual-station-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-top:18px}
+    .manual-station-item{display:flex;align-items:center;gap:10px;background:#fafafa;border:1px solid #f0f0f0;border-radius:12px;padding:12px 14px}
+    .manual-station-item i{color:#10261D;flex-shrink:0}
+    .manual-station-item span{font-size:12px;font-weight:700;color:#374151}
+
+    .manual-rank-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:22px}
+    .manual-rank-card{text-align:center;padding:24px 12px;border-radius:16px;border:2px solid}
+    .manual-rank-card.gold{background:linear-gradient(180deg,#fffbeb,#fff);border-color:#D4AF37}
+    .manual-rank-card.silver{background:linear-gradient(180deg,#f8fafc,#fff);border-color:#a8adb4}
+    .manual-rank-card.bronze{background:linear-gradient(180deg,#fdf1e7,#fff);border-color:#cd7f32}
+    .manual-rank-icon{font-size:36px;margin-bottom:8px}
+    .manual-rank-name{font-weight:900;font-size:13.5px;color:#1f2937}
+    .manual-class-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+    .manual-class-card{border-radius:12px;padding:14px;text-align:center;border:1px solid}
+    .manual-class-card .emoji{font-size:22px;display:block;margin-bottom:4px}
+    .manual-class-card .name{font-weight:900;font-size:12px}
+    .manual-class-card .range{font-size:10px;color:#6b7280;font-weight:600;margin-top:2px}
+
+    .manual-badges-recap{background:linear-gradient(180deg,#fffdf5,#fff);border:2px solid rgba(212,175,55,.4);border-radius:18px;padding:24px 26px}
+    .manual-tier-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}
+    .manual-tier-chip{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e5e7eb;border-radius:999px;padding:8px 16px;font-size:12px;font-weight:800;color:#374151}
+    .manual-tier-chip.bronze{border-color:#cd7f32;color:#a8632a}
+    .manual-tier-chip.prata{border-color:#a8adb4;color:#71767d}
+    .manual-tier-chip.ouro{border-color:#C9A227;color:#8a6d1a}
+    .manual-tier-chip.diamante{border-color:#4FC3F7;color:#0284a3}
+
+    .manual-fairplay-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+    .manual-fairplay-card{background:#10261D;border-radius:14px;padding:18px 20px;display:flex;align-items:flex-start;gap:12px;position:relative;overflow:hidden}
+    .manual-fairplay-card::before{content:'';position:absolute;top:-20px;right:-20px;width:70px;height:70px;background:rgba(245,179,1,.08);border-radius:50%}
+    .manual-fairplay-card i{color:#58D68D;flex-shrink:0;margin-top:1px}
+    .manual-fairplay-card span{color:#fff;font-size:12.5px;font-weight:600;line-height:1.5;position:relative;z-index:1}
+
+    .manual-final{background:linear-gradient(160deg,#10261D,#1B4332);border-radius:20px;padding:56px 32px;text-align:center;color:#fff;margin-top:10px}
+    .manual-final-trophy{font-size:52px;margin-bottom:18px}
+    .manual-final h2{font-size:22px;font-weight:900;max-width:560px;margin:0 auto;line-height:1.5}
+    .manual-final .gold-underline{width:70px;height:3px;background:#D4AF37;border-radius:3px;margin:22px auto 0}
+  </style>
+</head>
+<body class="w-full">
+  <div class="app-wrapper">
+    <aside id="sidebar" class="sidebar no-print">
+      <div class="sidebar-logo-area">
+        <div class="brand-name">MISSÃO SIMPLIFICAR<span class="brand-sub">SEMANA ODS NA PRÁTICA · EM APOIO AO ODS 12 E AO ODS 8</span></div>
+      </div>
+      <nav class="flex-1 py-1">
+        <div class="nav-link active" data-nav="dashboard"><i data-lucide="layout-dashboard" class="w-5 h-5" style="flex-shrink:0"></i><span>Dashboard</span></div>
+        <div class="nav-link" data-nav="ranking"><i data-lucide="trophy" class="w-5 h-5" style="flex-shrink:0"></i><span>Ranking</span></div>
+        <div class="nav-link" data-nav="auditoria"><i data-lucide="clipboard-check" class="w-5 h-5" style="flex-shrink:0"></i><span>Nova Verificação</span></div>
+        <div class="nav-link" data-nav="relatorios"><i data-lucide="file-text" class="w-5 h-5" style="flex-shrink:0"></i><span>Relatórios</span></div>
+        <div class="nav-link" data-nav="departamentos"><i data-lucide="building-2" class="w-5 h-5" style="flex-shrink:0"></i><span>Departamentos</span></div>
+        <div class="nav-link" data-nav="criterios"><i data-lucide="list-checks" class="w-5 h-5" style="flex-shrink:0"></i><span>Critérios</span></div>
+        <div class="nav-link" data-nav="selos"><i data-lucide="award" class="w-5 h-5" style="flex-shrink:0"></i><span>Coleção de Selos</span></div>
+        <div class="nav-link" data-nav="manual"><i data-lucide="book-open" class="w-5 h-5" style="flex-shrink:0"></i><span>Manual do Jogo</span></div>
+        <div class="nav-link" data-nav="configuracoes"><i data-lucide="settings" class="w-5 h-5" style="flex-shrink:0"></i><span>Configurações</span></div>
+      </nav>
+      <div id="sidebar-user-card" class="sidebar-user-card">
+        <div id="sidebar-user-avatar" class="sidebar-user-avatar"><i data-lucide="user" class="w-5 h-5"></i></div>
+        <div class="min-w-0 flex-1">
+          <p id="sidebar-user-name" class="sidebar-user-name">—</p>
+          <p id="sidebar-user-role" class="sidebar-user-role">—</p>
+        </div>
+        <i data-lucide="chevron-down" class="w-4 h-4 sidebar-user-caret" style="flex-shrink:0"></i>
+        <div id="sidebar-user-menu" class="sidebar-user-menu">
+          <a href="/logout" class="sidebar-user-menu-item"><i data-lucide="log-out" class="w-4 h-4"></i> Sair</a>
+        </div>
+      </div>
+    </aside>
+    <div class="main-area">
+      <header class="bg-white border-b border-gray-100 px-6 py-3 flex items-center justify-between gap-4 no-print flex-shrink-0">
+        <div class="flex items-center gap-3 min-w-0">
+          <button id="mobile-menu-btn" class="lg:hidden p-2 flex-shrink-0"><i data-lucide="menu" class="w-5 h-5"></i></button>
+          <div class="min-w-0">
+            <h1 id="page-heading" class="font-extrabold text-xl truncate">Missão Simplificar</h1>
+            <p id="page-subheading" class="mt-0.5 text-xs truncate text-gray-500">A jornada rumo à excelência.</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0"><select id="company-switcher" class="header-pill-select hidden" title="Empresa ativa"></select></div>
+        <div id="header-controls" class="flex items-center gap-3 flex-shrink-0">
+          <select id="dept-select-dash" class="header-pill-select hidden sm:block"></select>
+          <select id="dash-season-select" class="header-pill-select hidden md:block"></select>
+          <button id="dash-pdf-btn" class="header-pdf-btn"><i data-lucide="file-text" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Exportar PDF</span></button>
+        </div>
+      </header>
+      <div class="main-content">
+        <!-- DASHBOARD -->
+        <div id="tab-dashboard" class="tab-content active">
+          <div class="hero-section mb-3">
+            <div class="hero-content flex items-center justify-between gap-4 flex-wrap">
+              <div class="min-w-0 flex-1">
+                <h2 id="hero-title" class="text-white font-extrabold leading-tight text-lg sm:text-2xl">Como está meu setor?</h2>
+                <p id="hero-subtitle" class="text-white/80 mt-2 text-xs sm:text-sm">Acompanhe o desempenho do seu setor e evolua todos os dias.</p>
+              </div>
+              <div class="hero-trophy-wrap">
+                <span class="hero-sparkle" style="top:6px;left:10px;animation-delay:.2s">✨</span>
+                <span class="hero-sparkle" style="bottom:10px;right:6px;animation-delay:.9s">⭐</span>
+                <span class="hero-sparkle" style="top:20px;right:0;animation-delay:1.4s">✨</span>
+                <span class="hero-trophy-emoji">🏆</span>
+              </div>
+              <div class="hero-level-card">
+                <p class="hero-level-label">NÍVEL ATUAL</p>
+                <div class="hero-level-name"><span id="hero-level-icon">🥇</span><span id="hero-level-label-text">OURO</span></div>
+                <div class="hero-xp-track"><div id="hero-xp-fill" class="hero-xp-fill" style="width:0%"></div></div>
+                <p id="hero-xp-label" class="hero-xp-label">0 / 0 XP</p>
+                <p id="hero-next-level" class="hero-next-level"><i data-lucide="gem" class="w-3.5 h-3.5"></i><span>Próximo nível: —</span></p>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-3">
+            <div class="space-y-3" id="kpi-container">
+              <div class="kpi-card" data-pillar="Utilização">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0"><i data-lucide="layout-grid" class="w-4 h-4 text-amber-600"></i></div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-gray-700 text-sm">Utilização</p>
+                    <div class="flex items-baseline gap-1 mt-0.5"><span class="kpi-value font-extrabold text-2xl">0</span><span class="text-gray-400 text-xs">%</span></div>
+                    <div class="w-full bg-gray-100 rounded-full h-1.5 mt-1.5 overflow-hidden"><div class="kpi-bar h-full rounded-full" style="width:0%;background:#eab308"></div></div>
+                  </div>
+                  <div class="flex flex-col items-center gap-0.5 flex-shrink-0"><span class="emoji text-lg">😐</span><span class="classification text-[8px] font-bold uppercase text-gray-600"></span></div>
+                </div>
+              </div>
+              <div class="kpi-card" data-pillar="Limpeza">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-lg bg-cyan-50 flex items-center justify-center flex-shrink-0"><i data-lucide="sparkles" class="w-4 h-4 text-cyan-600"></i></div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-gray-700 text-sm">Limpeza</p>
+                    <div class="flex items-baseline gap-1 mt-0.5"><span class="kpi-value font-extrabold text-2xl">0</span><span class="text-gray-400 text-xs">%</span></div>
+                    <div class="w-full bg-gray-100 rounded-full h-1.5 mt-1.5 overflow-hidden"><div class="kpi-bar h-full rounded-full" style="width:0%;background:#06b6d4"></div></div>
+                  </div>
+                  <div class="flex flex-col items-center gap-0.5 flex-shrink-0"><span class="emoji text-lg">😐</span><span class="classification text-[8px] font-bold uppercase text-gray-600"></span></div>
+                </div>
+              </div>
+              <div class="kpi-card" data-pillar="Padronização">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center flex-shrink-0"><i data-lucide="clipboard-check" class="w-4 h-4 text-rose-500"></i></div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-gray-700 text-sm">Padronização</p>
+                    <div class="flex items-baseline gap-1 mt-0.5"><span class="kpi-value font-extrabold text-2xl">0</span><span class="text-gray-400 text-xs">%</span></div>
+                    <div class="w-full bg-gray-100 rounded-full h-1.5 mt-1.5 overflow-hidden"><div class="kpi-bar h-full rounded-full" style="width:0%;background:#f43f5e"></div></div>
+                  </div>
+                  <div class="flex flex-col items-center gap-0.5 flex-shrink-0"><span class="emoji text-lg">😐</span><span class="classification text-[8px] font-bold uppercase text-gray-600"></span></div>
+                </div>
+              </div>
+              <div class="kpi-card" data-pillar="Disciplina">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0"><i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i></div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-gray-700 text-sm">Disciplina</p>
+                    <div class="flex items-baseline gap-1 mt-0.5"><span class="kpi-value font-extrabold text-2xl">0</span><span class="text-gray-400 text-xs">%</span></div>
+                    <div class="w-full bg-gray-100 rounded-full h-1.5 mt-1.5 overflow-hidden"><div class="kpi-bar h-full rounded-full" style="width:0%;background:#10b981"></div></div>
+                  </div>
+                  <div class="flex flex-col items-center gap-0.5 flex-shrink-0"><span class="emoji text-lg">😐</span><span class="classification text-[8px] font-bold uppercase text-gray-600"></span></div>
+                </div>
+              </div>
+              <footer class="rounded-xl p-3 border border-gray-100">
+                <div class="flex flex-wrap gap-x-3 gap-y-1.5 text-sm text-gray-600">
+                  <div class="flex items-center gap-1.5"><span>😀</span><span><strong class="text-green-600">ÓTIMO</strong> 95–100%</span></div>
+                  <div class="flex items-center gap-1.5"><span>🙂</span><span><strong class="text-blue-600">BOM</strong> 80–94%</span></div>
+                  <div class="flex items-center gap-1.5"><span>😐</span><span><strong class="text-yellow-500">REGULAR</strong> 60–79%</span></div>
+                  <div class="flex items-center gap-1.5"><span>☹️</span><span><strong class="text-red-500">RUIM</strong> 0–59%</span></div>
+                </div>
+              </footer>
+            </div>
+            <div class="flex flex-col gap-3">
+              <div class="kpi-card flex flex-col items-center py-5">
+                <h2 id="avg-title" class="text-[10px] font-bold uppercase tracking-widest text-gray-600 mb-3">Média Geral</h2>
+                <div class="relative w-20 h-20 sm:w-24 sm:h-24 mb-3">
+                  <svg viewbox="0 0 120 120" class="w-full h-full -rotate-90"><circle cx="60" cy="60" r="50" fill="none" stroke="#f3f4f6" stroke-width="14"/><circle id="donut-progress" cx="60" cy="60" r="50" fill="none" stroke="#eab308" stroke-width="14" stroke-linecap="round" class="donut-ring" stroke-dasharray="0 314"/></svg>
+                  <div class="absolute inset-0 flex items-center justify-center"><span id="donut-value" class="text-xs sm:text-base font-extrabold text-gray-800">0%</span></div>
+                </div>
+                <div id="sector-perf-pill" class="flex items-center gap-1.5 text-xs font-extrabold"><span id="sector-emoji" class="text-sm">😐</span><span id="sector-text">—</span><span class="text-gray-400 font-bold">DESEMPENHO</span></div>
+              </div>
+              <div class="kpi-card py-4 flex items-center gap-3">
+                <div class="icon-chip bg-blue-50"><i data-lucide="building-2" class="w-4 h-4 text-blue-600"></i></div>
+                <div class="min-w-0 flex-1"><p class="text-[9px] font-bold uppercase tracking-widest text-gray-500">Escritório</p><span id="dash-office-avg" class="font-extrabold text-lg">0%</span></div>
+              </div>
+              <div class="kpi-card py-4 flex items-center gap-3">
+                <div class="icon-chip bg-amber-50"><i data-lucide="users" class="w-4 h-4 text-amber-600"></i></div>
+                <div class="min-w-0 flex-1"><p class="text-[9px] font-bold uppercase tracking-widest text-gray-500">Área Comum</p><span id="dash-common-avg" class="font-extrabold text-lg">0%</span></div>
+              </div>
+              <div class="kpi-card py-4 flex items-center gap-3">
+                <div class="icon-chip bg-yellow-50"><i data-lucide="trophy" class="w-4 h-4 text-yellow-600"></i></div>
+                <div class="min-w-0 flex-1"><p id="sector-class-label" class="text-[9px] font-bold uppercase tracking-widest text-gray-500">Classificação</p><div class="flex items-center gap-1.5"><span id="sector-emoji-2" class="text-sm">😐</span><span id="sector-text-2" class="font-extrabold text-sm">—</span></div></div>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div class="kpi-card text-center py-3"><p class="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-1">Verificações</p><span id="dash-audit-count" class="font-extrabold text-lg">0</span></div>
+                <div class="kpi-card text-center py-3"><p class="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-1">Última Verificação</p><span id="dash-last-audit" class="font-bold text-xs text-gray-700">—</span></div>
+              </div>
+              <div class="evo-card">
+                <p class="evo-title">Evolução Geral</p>
+                <div id="evo-chart-wrap"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- RANKING -->
+        <div id="tab-ranking" class="tab-content">
+          <div class="kpi-card">
+            <div class="text-center mb-6">
+              <h2 class="text-2xl font-extrabold text-gray-800 mb-1">🏆 Ranking dos Departamentos</h2>
+              <p class="text-sm text-gray-500">Classificação baseada nas verificações realizadas</p>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead>
+                  <tr class="bg-emerald-50 border-b-2 border-emerald-200">
+                    <th class="p-3 text-left text-xs font-bold uppercase text-gray-700">Posição</th>
+                    <th class="p-3 text-left text-xs font-bold uppercase text-gray-700">Departamento</th>
+                    <th class="p-3 text-center text-xs font-bold uppercase text-gray-700">Média</th>
+                    <th class="p-3 text-center text-xs font-bold uppercase text-gray-700 hidden sm:table-cell">Classificação</th>
+                    <th class="p-3 text-right text-xs font-bold uppercase text-gray-700 hidden lg:table-cell">Última Verificação</th>
+                  </tr>
+                </thead>
+                <tbody id="ranking-table"></tbody>
+              </table>
+            </div>
+            <p id="ranking-empty" class="text-gray-400 text-sm text-center py-8">Sem dados de verificação disponíveis.</p>
+          </div>
+        </div>
+        <!-- NOVA AUDITORIA -->
+        <div id="tab-auditoria" class="tab-content">
+          <div class="kpi-card">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Nova Verificação</h2>
+            <div id="audit-step-info">
+              <div class="mb-6">
+                <label class="block text-xs font-semibold text-gray-700 mb-3">Tipo de Verificação *</label>
+                <div id="audit-type-radio-group" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                <div id="audit-dept-container" class="hidden">
+                  <label class="block text-xs font-semibold text-gray-700 mb-1" for="audit-dept">Departamento *</label>
+                  <select id="audit-dept" class="w-full border rounded-lg px-3 py-2 text-sm"><option value="">Selecione...</option></select>
+                </div>
+                <div><label class="block text-xs font-semibold text-gray-700 mb-1" for="audit-auditor">Responsável pela Verificação *</label><select id="audit-auditor" class="w-full border rounded-lg px-3 py-2 text-sm"><option value="">Selecione...</option></select></div>
+                <div><label class="block text-xs font-semibold text-gray-700 mb-1" for="audit-date">Data *</label><input id="audit-date" type="date" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+              </div>
+              <button id="audit-start-btn" class="w-full px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 mb-2">Iniciar Verificação</button>
+              <p id="audit-start-err" class="text-red-600 text-xs mt-2 hidden"></p>
+            </div>
+            <div id="audit-step-checklist" class="hidden">
+              <div class="flex items-center justify-between mb-4"><h3 class="font-bold text-base text-emerald-800" id="checklist-title">📋 Checklist</h3></div>
+              <div id="audit-checklist-container" class="space-y-4"></div>
+              <div id="audit-validation-msg" class="hidden mt-4 p-3 rounded-lg text-sm font-medium bg-red-50 text-red-700 border border-red-200"></div>
+              <div class="flex gap-2 audit-actions">
+                <button id="cancel-audit-btn" class="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700">Cancelar</button>
+                <button id="finish-audit-btn" class="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700">Avaliação Finalizada</button>
+              </div>
+            </div>
+          </div>
+          <div id="audit-step-result" class="hidden">
+            <h3 class="font-bold text-base text-gray-800 mb-4">Resultado da Verificação</h3>
+            <div id="result-summary" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 mb-4"></div>
+            <div class="text-center mb-4"><span id="result-emoji" class="text-4xl"></span><p id="result-class" class="font-extrabold text-lg mt-1"></p></div>
+            <div id="result-pillars" class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4"></div>
+            <div class="flex gap-2">
+              <button id="new-audit-btn" class="px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg">Nova Verificação</button>
+              <button id="result-pdf-btn" class="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg flex items-center gap-2"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> PDF</button>
+            </div>
+          </div>
+        </div>
+        <!-- RELATÓRIOS -->
+        <div id="tab-relatorios" class="tab-content">
+          <div id="rel-type-selector" class="px-5 pt-0">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button id="rel-btn-escritorio" class="rel-type-btn h-32 rounded-xl border-2 border-gray-200 bg-white hover:border-blue-400 hover:bg-blue-50 transition flex flex-col items-center justify-center gap-3 p-4"><i data-lucide="building-2" class="w-8 h-8 text-blue-600"></i><span class="font-bold text-lg text-gray-800">Escritório</span><span class="text-xs text-gray-500">Verificações de escritório</span></button>
+              <button id="rel-btn-comum" class="rel-type-btn h-32 rounded-xl border-2 border-gray-200 bg-white hover:border-amber-400 hover:bg-amber-50 transition flex flex-col items-center justify-center gap-3 p-4"><i data-lucide="users" class="w-8 h-8 text-amber-600"></i><span class="font-bold text-lg text-gray-800">Área Comum</span><span class="text-xs text-gray-500">Verificações de área comum</span></button>
+            </div>
+          </div>
+          <div id="rel-filters-section" class="kpi-card hidden mx-5 mt-3" style="display:none">
+            <div class="flex justify-between items-center mb-4">
+              <div><h2 class="text-xl font-bold text-gray-800">Histórico de Verificações</h2><p id="rel-type-label" class="text-xs text-gray-500 mt-1"></p></div>
+              <button id="rel-back-btn" class="text-gray-500 hover:text-gray-700"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
+            </div>
+            <div class="flex flex-col gap-4 mb-4">
+              <div class="flex flex-wrap gap-2">
+                <select id="rel-dept" class="border rounded-lg px-3 py-2 text-sm"><option value="">Todos Departamentos</option></select>
+                <select id="rel-classification" class="border rounded-lg px-3 py-2 text-sm"><option value="">Todas Classificações</option><option>ÓTIMO</option><option>BOM</option><option>REGULAR</option><option>RUIM</option></select>
+                <input id="rel-search" class="border rounded-lg px-3 py-2 text-sm flex-1 min-w-0" placeholder="Pesquisar...">
+              </div>
+              <div class="flex flex-wrap gap-2 mb-4">
+                <input id="rel-date-from" type="date" class="border rounded-lg px-3 py-2 text-sm">
+                <input id="rel-date-to" type="date" class="border rounded-lg px-3 py-2 text-sm">
+                <button id="rel-filter-btn" class="px-4 py-2 bg-gray-800 text-white text-sm rounded-lg font-semibold">Filtrar</button>
+                <button id="rel-clear-btn" class="px-4 py-2 bg-gray-400 text-white text-sm rounded-lg font-semibold hover:bg-gray-500">Limpar Filtros</button>
+              </div>
+              <div id="reports-list" class="space-y-3"></div>
+              <p id="rel-empty" class="text-gray-400 text-sm text-center py-6">Nenhuma verificação registrada.</p>
+            </div>
+          </div>
+        </div>
+        <!-- DEPARTAMENTOS -->
+        <div id="tab-departamentos" class="tab-content">
+          <div class="mb-4 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-gray-800">Departamentos</h2>
+            <button id="add-dept-btn" class="px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Novo</button>
+          </div>
+          <div id="dept-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+        <!-- CRITÉRIOS -->
+        <div id="tab-criterios" class="tab-content">
+          <div class="kpi-card">
+            <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+              <h2 class="text-xl font-bold text-gray-800">Critérios de Verificação</h2>
+              <div class="flex gap-2">
+                <button id="add-criterion-btn" class="px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Novo</button>
+                <button id="seed-criteria-btn" class="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 flex items-center gap-2"><i data-lucide="refresh-cw" class="w-4 h-4"></i> Carregar Padrão</button>
+              </div>
+            </div>
+            <div class="mb-3 flex flex-col sm:flex-row gap-2">
+              <select id="filter-type-crit" class="border rounded-lg px-3 py-2 text-sm"><option value="">Todos Tipos</option><option>Escritório</option><option>Área Comum</option></select>
+              <select id="filter-pillar-crit" class="border rounded-lg px-3 py-2 text-sm"><option value="">Todos Sensos</option><option>Utilização</option><option>Limpeza</option><option>Padronização</option><option>Disciplina</option></select>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead><tr class="bg-gray-50 text-left"><th class="p-2">Tipo</th><th class="p-2">Senso</th><th class="p-2">Item</th><th class="p-2">Pergunta</th><th class="p-2">Critério</th><th class="p-2 w-14">Ativo</th><th class="p-2 w-20">Ações</th></tr></thead>
+                <tbody id="criteria-table"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <!-- SELOS -->
+        <div id="tab-selos" class="tab-content">
+          <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2"><i data-lucide="award" class="w-5 h-5 text-amber-500"></i>Coleção de Selos</h2>
+            <select id="selos-dept-select" class="border border-gray-200 rounded-full px-4 py-2 text-xs font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-green-500"></select>
+          </div>
+          <div class="selos-header">
+            <p class="text-[11px] uppercase tracking-widest font-bold text-white/60 mb-1" id="selos-header-dept">Selecione um departamento</p>
+            <div class="flex items-end justify-between flex-wrap gap-3">
+              <div>
+                <span id="selos-total-count" class="text-2xl font-extrabold">0 de 0</span>
+                <span class="text-sm text-white/70 ml-1">selos conquistados</span>
+              </div>
+              <div id="selos-level-badge" class="selos-level-badge">🥉 <span>Bronze</span></div>
+            </div>
+            <div class="selos-progress-track"><div id="selos-total-fill" class="selos-progress-fill" style="width:0%"></div></div>
+            <p id="selos-total-pct" class="text-xs font-bold text-white/80 text-right">0%</p>
+          </div>
+          <div id="selos-categories"></div>
+          <p id="selos-empty" class="text-gray-400 text-sm text-center py-10 hidden">Selecione um departamento para ver os selos conquistados.</p>
+        </div>
+        <!-- MANUAL DO JOGO -->
+        <div id="tab-manual" class="tab-content">
+
+          <div class="manual-toolbar no-print">
+            <button id="manual-edit-btn" type="button" class="manual-tool-btn hidden"><i data-lucide="pencil" class="w-3.5 h-3.5"></i> Editar Manual</button>
+            <button id="manual-save-btn" type="button" class="manual-tool-btn primary hidden"><i data-lucide="check" class="w-3.5 h-3.5"></i> Salvar</button>
+            <button id="manual-cancel-btn" type="button" class="manual-tool-btn hidden"><i data-lucide="x" class="w-3.5 h-3.5"></i> Cancelar</button>
+            <button id="manual-print-btn" type="button" class="manual-tool-btn"><i data-lucide="printer" class="w-3.5 h-3.5"></i> Imprimir Manual</button>
+          </div>
+
+          <nav class="manual-nav no-print">
+            <a class="manual-nav-pill" href="#m-boasvindas">Bem-vindo</a>
+            <a class="manual-nav-pill" href="#m-pontuacao">Pontuação</a>
+            <a class="manual-nav-pill" href="#m-utilizacao">Utilização</a>
+            <a class="manual-nav-pill" href="#m-limpeza">Limpeza</a>
+            <a class="manual-nav-pill" href="#m-padronizacao">Padronização</a>
+            <a class="manual-nav-pill" href="#m-disciplina">Disciplina</a>
+            <a class="manual-nav-pill" href="#m-areas">Áreas Comuns</a>
+            <a class="manual-nav-pill" href="#m-estacao">Estação de Trabalho</a>
+            <a class="manual-nav-pill" href="#m-ranking">Ranking</a>
+            <a class="manual-nav-pill" href="#m-selos">Selos</a>
+            <a class="manual-nav-pill" href="#m-fairplay">Fair Play</a>
+          </nav>
+
+          <div id="manual-editable">
+
+          <div class="manual-cover">
+            <div class="manual-cover-inner">
+              <span class="manual-kicker">📘 Manual Oficial do Jogador</span>
+              <h1>MISSÃO SIMPLIFICAR</h1>
+              <div class="manual-cover-divider"></div>
+              <p>Tudo o que você precisa saber para jogar, pontuar e colecionar selos nas verificações 5S do seu setor.</p>
+            </div>
+          </div>
+
+          <!-- BEM-VINDO -->
+          <section id="m-boasvindas" class="manual-section">
+            <div class="manual-section-head">
+              <div class="manual-section-num">01</div>
+              <div><div class="manual-section-title">Bem-vindo ao jogo</div><div class="manual-section-sub">Objetivo e como tudo funciona</div></div>
+            </div>
+            <p class="manual-prose">O <strong>Missão Simplificar</strong> transforma o programa 5S em um jogo de verdade. Seu departamento é avaliado periodicamente em 4 sensos — <strong>Utilização, Limpeza, Padronização e Disciplina</strong> — e cada boa avaliação rende pontos, sobe posições no ranking e desbloqueia selos de conquista. O objetivo é simples: manter o setor sempre no seu melhor nível, todos os dias — não só quando o responsável pela verificação está por perto.</p>
+            <div class="manual-flow">
+              <div class="manual-flow-step"><div class="manual-flow-icon"><i data-lucide="clipboard-check" class="w-5 h-5"></i></div><span class="manual-flow-label">Verificação</span></div>
+              <div class="manual-flow-arrow"><i data-lucide="chevron-right" class="w-5 h-5"></i></div>
+              <div class="manual-flow-step"><div class="manual-flow-icon"><i data-lucide="list-checks" class="w-5 h-5"></i></div><span class="manual-flow-label">Avaliação</span></div>
+              <div class="manual-flow-arrow"><i data-lucide="chevron-right" class="w-5 h-5"></i></div>
+              <div class="manual-flow-step"><div class="manual-flow-icon"><i data-lucide="camera" class="w-5 h-5"></i></div><span class="manual-flow-label">Evidências</span></div>
+              <div class="manual-flow-arrow"><i data-lucide="chevron-right" class="w-5 h-5"></i></div>
+              <div class="manual-flow-step"><div class="manual-flow-icon"><i data-lucide="percent" class="w-5 h-5"></i></div><span class="manual-flow-label">Pontuação</span></div>
+              <div class="manual-flow-arrow"><i data-lucide="chevron-right" class="w-5 h-5"></i></div>
+              <div class="manual-flow-step"><div class="manual-flow-icon"><i data-lucide="trophy" class="w-5 h-5"></i></div><span class="manual-flow-label">Ranking</span></div>
+            </div>
+          </section>
+
+          <!-- PONTUAÇÃO -->
+          <section id="m-pontuacao" class="manual-section">
+            <div class="manual-section-head">
+              <div class="manual-section-num">02</div>
+              <div><div class="manual-section-title">Sistema de Pontuação</div><div class="manual-section-sub">Como cada critério é avaliado</div></div>
+            </div>
+            <p class="manual-prose">Durante a verificação, cada item do checklist recebe uma destas três respostas:</p>
+            <div class="manual-score-grid">
+              <div class="manual-score-card atende">
+                <div class="manual-score-icon">✅</div>
+                <div class="manual-score-title">ATENDE</div>
+                <div class="manual-score-desc">O item está 100% de acordo com o critério. Vale nota cheia (100 pontos).</div>
+              </div>
+              <div class="manual-score-card parcial">
+                <div class="manual-score-icon">🟡</div>
+                <div class="manual-score-title">PARCIAL</div>
+                <div class="manual-score-desc">O item está quase certo, mas tem algum detalhe fora do padrão. Vale metade da nota (50 pontos).</div>
+              </div>
+              <div class="manual-score-card nao">
+                <div class="manual-score-icon">❌</div>
+                <div class="manual-score-title">NÃO ATENDE</div>
+                <div class="manual-score-desc">O item não cumpre o critério estabelecido. Não pontua (0 pontos).</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- UTILIZAÇÃO -->
+          <section id="m-utilizacao" class="manual-section">
+            <div class="manual-section-head">
+              <div class="manual-section-num">03</div>
+              <div><div class="manual-section-title">Senso de Utilização</div><div class="manual-section-sub">Só o necessário, no lugar certo</div></div>
+            </div>
+            <p class="manual-criteria-label">Critérios avaliados neste senso</p>
+            <div id="manual-crit-utilizacao" class="manual-criteria-list"></div>
+            <div class="manual-compare">
+              <div class="manual-compare-col ok">
+                <div class="manual-compare-head">✅ Correto</div>
+                <div class="manual-compare-item"><i data-lucide="check" class="w-4 h-4"></i> Armário identificado e sem itens em cima</div>
+                <div class="manual-compare-item"><i data-lucide="check" class="w-4 h-4"></i> Mesa organizada, com poucos objetos pessoais</div>
+                <div class="manual-compare-item"><i data-lucide="check" class="w-4 h-4"></i> Pastas digitais e área de trabalho organizadas</div>
+                <div class="manual-compare-item"><i data-lucide="check" class="w-4 h-4"></i> Sem excesso de canetas, papéis ou post-its</div>
+              </div>
+              <div class="manual-compare-col bad">
+                <div class="manual-compare-head">❌ Incorreto</div>
+                <div class="manual-compare-item"><i data-lucide="x" class="w-4 h-4"></i> Mochila ou bolsa sobre a mesa</div>
+                <div class="manual-compare-item"><i data-lucide="x" class="w-4 h-4"></i> Maquiagem, cremes ou itens pessoais na bancada</div>
+                <div class="manual-compare-item"><i data-lucide="x" class="w-4 h-4"></i> Excesso de canetas, papéis e post-its acumulados</div>
+                <div class="manual-compare-item"><i data-lucide="x" class="w-4 h-4"></i> Cabos desorganizados sobre a mesa</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- LIMPEZA -->
+          <section id="m-limpeza" class="manual-section">
+            <div class="manual-section-head">
+              <div class="manual-section-num">04</div>
+              <div><div class="manual-section-title">Senso de Limpeza</div><div class="manual-section-sub">Ambiente limpo é ambiente seguro</div></div>
+            </div>
+            <p class="manual-criteria-label">Critérios avaliados neste senso</p>
+            <div id="manual-crit-limpeza" class="manual-criteria-list"></div>
+            <div class="manual-compare">
+              <div class="manual-compare-col ok">
+                <div class="manual-compare-head">✅ Correto</div>
+                <div class="manual-compare-item"><i data-lucide="check" class="w-4 h-4"></i> Mesa de trabalho e piso limpos</div>
+                <div class="manual-compare-item"><i data-lucide="check" class="w-4 h-4"></i> Pia da copa limpa e seca</div>
+                <div class="manual-compare-item"><i data-lucide="check" class="w-4 h-4"></i> Banheiro organizado, sem papel no chão</div>
+                <div class="manual-compare-item"><i data-lucide="check" class="w-4 h-4"></i> Resíduos descartados corretamente</div>
+              </div>
+              <div class="manual-compare-col bad">
+                <div class="manual-compare-head">❌ Incorreto</div>
+                <div class="manual-compare-item"><i data-lucide="x" class="w-4 h-4"></i> Pia cheia de louça acumulada</div>
+                <div class="manual-compare-item"><i data-lucide="x" class="w-4 h-4"></i> Copos e embalagens espalhados pela estação</div>
+                <div class="manual-compare-item"><i data-lucide="x" class="w-4 h-4"></i> Papel no chão ou cabines sujas</div>
+                <div class="manual-compare-item"><i data-lucide="x" class="w-4 h-4"></i> Lixeiras improvisadas sobre mesas</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- PADRONIZAÇÃO -->
+          <section id="m-padronizacao" class="manual-section">
+            <div class="manual-section-head">
+              <div class="manual-section-num">05</div>
+              <div><div class="manual-section-title">Senso de Padronização</div><div class="manual-section-sub">Tudo com identidade visual e nomenclatura únicas</div></div>
+            </div>
+            <p class="manual-criteria-label">Critérios avaliados neste senso</p>
+            <div id="manual-crit-padronizacao" class="manual-criteria-list"></div>
+            <div class="manual-compare">
+              <div class="manual-compare-col ok">
+                <div class="manual-compare-head">✅ Correto</div>
+                <div class="manual-compare-item"><i data-lucide="check" class="w-4 h-4"></i> Crachá visível durante o expediente</div>
+                <div class="manual-compare-item"><i data-lucide="check" class="w-4 h-4"></i> Monitor e equipamentos identificados</div>
+                <div class="manual-compare-item"><i data-lucide="check" class="w-4 h-4"></i> Arquivos e pastas com nomenclatura padronizada</div>
+                <div class="manual-compare-item"><i data-lucide="check" class="w-4 h-4"></i> OneDrive e SharePoint organizados</div>
+              </div>
+              <div class="manual-compare-col bad">
+                <div class="manual-compare-head">❌ Incorreto</div>
+                <div class="manual-compare-item"><i data-lucide="x" class="w-4 h-4"></i> Arquivos sem padrão de nome</div>
+                <div class="manual-compare-item"><i data-lucide="x" class="w-4 h-4"></i> Monitor ou equipamento sem identificação</div>
+                <div class="manual-compare-item"><i data-lucide="x" class="w-4 h-4"></i> Pastas digitais bagunçadas</div>
+                <div class="manual-compare-item"><i data-lucide="x" class="w-4 h-4"></i> Colaborador sem crachá visível</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- DISCIPLINA -->
+          <section id="m-disciplina" class="manual-section">
+            <div class="manual-section-head">
+              <div class="manual-section-num">06</div>
+              <div><div class="manual-section-title">Senso de Disciplina</div><div class="manual-section-sub">Manter o padrão todos os dias, não só na verificação</div></div>
+            </div>
+            <p class="manual-criteria-label">Critérios avaliados neste senso</p>
+            <div id="manual-crit-disciplina" class="manual-criteria-list"></div>
+            <div class="manual-compare">
+              <div class="manual-compare-col ok">
+                <div class="manual-compare-head">✅ Correto</div>
+                <div class="manual-compare-item"><i data-lucide="check" class="w-4 h-4"></i> Computador bloqueado quando não está em uso</div>
+                <div class="manual-compare-item"><i data-lucide="check" class="w-4 h-4"></i> Porta da Área Gourmet mantida fechada</div>
+                <div class="manual-compare-item"><i data-lucide="check" class="w-4 h-4"></i> Setor organizado durante toda a verificação</div>
+                <div class="manual-compare-item"><i data-lucide="check" class="w-4 h-4"></i> Equipe receptiva e prestativa com o responsável pela verificação</div>
+              </div>
+              <div class="manual-compare-col bad">
+                <div class="manual-compare-head">❌ Incorreto</div>
+                <div class="manual-compare-item"><i data-lucide="x" class="w-4 h-4"></i> Computador desbloqueado e sem vigilância</div>
+                <div class="manual-compare-item"><i data-lucide="x" class="w-4 h-4"></i> Porta da Área Gourmet aberta sem necessidade</div>
+                <div class="manual-compare-item"><i data-lucide="x" class="w-4 h-4"></i> Setor arrumado só na hora da verificação</div>
+                <div class="manual-compare-item"><i data-lucide="x" class="w-4 h-4"></i> Materiais escondidos de propósito</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ÁREAS COMUNS -->
+          <section id="m-areas" class="manual-section">
+            <div class="manual-section-head">
+              <div class="manual-section-num">07</div>
+              <div><div class="manual-section-title">Áreas Comuns</div><div class="manual-section-sub">Espaços compartilhados, responsabilidade de todos</div></div>
+            </div>
+            <div class="manual-areas-grid">
+              <div class="manual-area-card">
+                <div class="manual-area-head">🍽️ Copa</div>
+                <div class="manual-area-body">
+                  <div class="manual-compare-item" style="border-top:none"><i data-lucide="check" class="w-4 h-4" style="color:#16a34a"></i> Bancadas limpas, sem potes ou utensílios sujos</div>
+                  <div class="manual-compare-item"><i data-lucide="x" class="w-4 h-4" style="color:#dc2626"></i> Louça acumulada e alimentos vencidos na geladeira</div>
+                </div>
+              </div>
+              <div class="manual-area-card">
+                <div class="manual-area-head">🚻 Banheiro</div>
+                <div class="manual-area-body">
+                  <div class="manual-compare-item" style="border-top:none"><i data-lucide="check" class="w-4 h-4" style="color:#16a34a"></i> Cabines limpas, pia seca, sem papel no chão</div>
+                  <div class="manual-compare-item"><i data-lucide="x" class="w-4 h-4" style="color:#dc2626"></i> Itens pessoais ou roupas guardadas no local</div>
+                </div>
+              </div>
+              <div class="manual-area-card">
+                <div class="manual-area-head">👥 Sala de Reunião</div>
+                <div class="manual-area-body">
+                  <div class="manual-compare-item" style="border-top:none"><i data-lucide="check" class="w-4 h-4" style="color:#16a34a"></i> Mesas e cadeiras alinhadas, cabos organizados</div>
+                  <div class="manual-compare-item"><i data-lucide="x" class="w-4 h-4" style="color:#dc2626"></i> Cadeiras desalinhadas e resíduos sobre a mesa</div>
+                </div>
+              </div>
+              <div class="manual-area-card">
+                <div class="manual-area-head">☕ Área Gourmet</div>
+                <div class="manual-area-body">
+                  <div class="manual-compare-item" style="border-top:none"><i data-lucide="check" class="w-4 h-4" style="color:#16a34a"></i> Porta mantida fechada, alimentos identificados</div>
+                  <div class="manual-compare-item"><i data-lucide="x" class="w-4 h-4" style="color:#dc2626"></i> Porta aberta e alimentos sem identificação</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ESTAÇÃO DE TRABALHO -->
+          <section id="m-estacao" class="manual-section">
+            <div class="manual-section-head">
+              <div class="manual-section-num">08</div>
+              <div><div class="manual-section-title">Guia da Estação de Trabalho</div><div class="manual-section-sub">O padrão ideal, item por item</div></div>
+            </div>
+            <div class="manual-station">
+              <p class="manual-prose" style="margin-bottom:0">Use este guia como referência rápida: cada estação de trabalho deve ter todos estes pontos em dia.</p>
+              <div class="manual-station-grid">
+                <div class="manual-station-item"><i data-lucide="table-2" class="w-4 h-4"></i><span>Mesa organizada</span></div>
+                <div class="manual-station-item"><i data-lucide="cable" class="w-4 h-4"></i><span>Cabos organizados</span></div>
+                <div class="manual-station-item"><i data-lucide="monitor" class="w-4 h-4"></i><span>Monitor identificado</span></div>
+                <div class="manual-station-item"><i data-lucide="mouse" class="w-4 h-4"></i><span>Mouse no lugar</span></div>
+                <div class="manual-station-item"><i data-lucide="backpack" class="w-4 h-4"></i><span>Objetos pessoais guardados</span></div>
+                <div class="manual-station-item"><i data-lucide="coffee" class="w-4 h-4"></i><span>Canecas na copa, não na mesa</span></div>
+                <div class="manual-station-item"><i data-lucide="id-card" class="w-4 h-4"></i><span>Crachá visível</span></div>
+                <div class="manual-station-item"><i data-lucide="lock" class="w-4 h-4"></i><span>Computador bloqueado</span></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- RANKING -->
+          <section id="m-ranking" class="manual-section">
+            <div class="manual-section-head">
+              <div class="manual-section-num">09</div>
+              <div><div class="manual-section-title">Ranking</div><div class="manual-section-sub">Como os departamentos são comparados</div></div>
+            </div>
+            <p class="manual-prose">O ranking é calculado com base na <strong>média geral</strong> das verificações de cada departamento. Quanto mais alta e mais consistente a nota, melhor a posição.</p>
+            <div class="manual-rank-grid">
+              <div class="manual-rank-card gold"><div class="manual-rank-icon">🥇</div><div class="manual-rank-name">1º Lugar</div></div>
+              <div class="manual-rank-card silver"><div class="manual-rank-icon">🥈</div><div class="manual-rank-name">2º Lugar</div></div>
+              <div class="manual-rank-card bronze"><div class="manual-rank-icon">🥉</div><div class="manual-rank-name">3º Lugar</div></div>
+            </div>
+            <p class="manual-prose" style="margin-bottom:12px"><strong>Classificação por faixa de nota:</strong></p>
+            <div class="manual-class-grid">
+              <div class="manual-class-card" style="background:#f0fdf4;border-color:#bbf7d0"><span class="emoji">😀</span><span class="name" style="color:#16a34a">ÓTIMO</span><span class="range">95–100%</span></div>
+              <div class="manual-class-card" style="background:#eff6ff;border-color:#bfdbfe"><span class="emoji">🙂</span><span class="name" style="color:#2563eb">BOM</span><span class="range">80–94%</span></div>
+              <div class="manual-class-card" style="background:#fefce8;border-color:#fef08a"><span class="emoji">😐</span><span class="name" style="color:#ca8a04">REGULAR</span><span class="range">60–79%</span></div>
+              <div class="manual-class-card" style="background:#fef2f2;border-color:#fecaca"><span class="emoji">☹️</span><span class="name" style="color:#dc2626">RUIM</span><span class="range">0–59%</span></div>
+            </div>
+          </section>
+
+          <!-- SELOS -->
+          <section id="m-selos" class="manual-section">
+            <div class="manual-section-head">
+              <div class="manual-section-num">10</div>
+              <div><div class="manual-section-title">🏅 Como Ganhar Selos</div><div class="manual-section-sub">A coleção de conquistas do jogo</div></div>
+            </div>
+            <p class="manual-prose">Cada vez que seu departamento faz uma boa verificação 5S, vocês podem desbloquear <strong>selos</strong> — como conquistas de um jogo. Quanto melhor a organização, limpeza e disciplina do setor, mais selos vocês ganham! Os selos são desbloqueados <strong>automaticamente</strong> conforme as verificações vão sendo feitas — não precisa fazer nada especial, só ficar de olho nestas dicas:</p>
+
+            <div class="manual-compare" style="margin-bottom:18px">
+              <div class="manual-compare-col ok">
+                <div class="manual-compare-head" style="color:#1f2937">🌟 Tire 100% em um senso</div>
+                <p style="font-size:12.5px;color:#4b5563;line-height:1.6">Se numa verificação seu setor bater 100% em Utilização, Limpeza, Padronização ou Disciplina, vocês ganham o selo <strong>"Mestre"</strong> daquele senso na hora.</p>
+              </div>
+              <div class="manual-compare-col bad" style="background:#eff6ff;border-color:#bfdbfe">
+                <div class="manual-compare-head" style="color:#1f2937">🎯 Capriche nos detalhes</div>
+                <p style="font-size:12.5px;color:#4b5563;line-height:1.6">Selos como <strong>Mesa Exemplar</strong>, <strong>Banheiro Exemplar</strong> e <strong>Copa Modelo</strong> exigem que todos os itens daquele assunto estejam "Atende" na mesma verificação.</p>
+              </div>
+            </div>
+            <div class="manual-compare" style="margin-bottom:18px">
+              <div class="manual-compare-col ok" style="background:#fefce8;border-color:#fef08a">
+                <div class="manual-compare-head" style="color:#1f2937">🔥 Mantenha a régua alta</div>
+                <p style="font-size:12.5px;color:#4b5563;line-height:1.6">3 verificações seguidas com 90%+ → <strong>Consistência</strong>. Grande evolução desde a primeira verificação → <strong>Melhor Evolução</strong>. Tirou 100% de nota geral → <strong>Verificação Perfeita</strong>.</p>
+              </div>
+              <div class="manual-compare-col ok" style="background:#fdf1e7;border-color:#f3d5b5">
+                <div class="manual-compare-head" style="color:#1f2937">🏆 Seja o melhor</div>
+                <p style="font-size:12.5px;color:#4b5563;line-height:1.6">Se o seu departamento ficar em 1º lugar no ranking geral, ganha o selo <strong>Campeão da Temporada</strong>. Desbloqueie todos os outros selos e ganhe o mais raro de todos: <strong>Lenda do Missão Simplificar</strong>.</p>
+              </div>
+            </div>
+
+            <div class="manual-badges-recap">
+              <p style="font-weight:900;font-size:14px;color:#92400e;margin-bottom:4px">💎 Repetindo, o selo evolui!</p>
+              <p style="font-size:12.5px;color:#78350f;line-height:1.6">Ganhar o mesmo selo várias vezes não é ganhar de novo à toa — cada vez que vocês repetem a conquista, o selo sobe de nível:</p>
+              <div class="manual-tier-row">
+                <span class="manual-tier-chip bronze">🥉 Bronze — conquistou 1x</span>
+                <span class="manual-tier-chip prata">🥈 Prata — conquistou 5x</span>
+                <span class="manual-tier-chip ouro">🥇 Ouro — conquistou 10x</span>
+                <span class="manual-tier-chip diamante">💎 Diamante — conquistou 20x (com brilho especial ✨)</span>
+              </div>
+            </div>
+
+            <p class="manual-prose" style="margin-top:18px;margin-bottom:0"><strong>Onde ver:</strong> vá até o menu "Coleção de Selos" e escolha seu departamento para ver quantos selos já tem, organizados por categoria, e o que falta para desbloquear os que ainda estão bloqueados 🔒. Os selos conquistados também aparecem no rodapé do PDF do Dashboard e dos relatórios de verificação — ótimo para mostrar o progresso do time para todo mundo! 🚀</p>
+          </section>
+
+          <!-- FAIR PLAY -->
+          <section id="m-fairplay" class="manual-section">
+            <div class="manual-section-head">
+              <div class="manual-section-num">11</div>
+              <div><div class="manual-section-title">Fair Play</div><div class="manual-section-sub">As regras de ouro do jogo</div></div>
+            </div>
+            <div class="manual-fairplay-grid">
+              <div class="manual-fairplay-card"><i data-lucide="sparkles" class="w-5 h-5"></i><span>Cuide do ambiente todos os dias, não só quando o responsável pela verificação está por perto.</span></div>
+              <div class="manual-fairplay-card"><i data-lucide="eye-off" class="w-5 h-5"></i><span>Não esconda materiais ou bagunça em gavetas e armários na hora da verificação.</span></div>
+              <div class="manual-fairplay-card"><i data-lucide="calendar-clock" class="w-5 h-5"></i><span>Não organize apenas na véspera — a disciplina é o que realmente conta.</span></div>
+              <div class="manual-fairplay-card"><i data-lucide="handshake" class="w-5 h-5"></i><span>Colabore com o time e com o responsável pela verificação durante todo o processo.</span></div>
+              <div class="manual-fairplay-card"><i data-lucide="shield-check" class="w-5 h-5"></i><span>Respeite os critérios estabelecidos — eles existem para manter todo mundo seguro.</span></div>
+            </div>
+          </section>
+
+          <div class="manual-final">
+            <div class="manual-final-trophy">🏆</div>
+            <h2>A VERDADEIRA VITÓRIA É TRANSFORMAR ORGANIZAÇÃO EM CULTURA.</h2>
+            <div class="gold-underline"></div>
+          </div>
+
+          </div>
+
+        </div>
+
+        <!-- CONFIGURAÇÕES -->
+        <div id="tab-configuracoes" class="tab-content">
+          <div class="kpi-card">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Configurações do Sistema</h2>
+            <div class="space-y-6">
+              <fieldset class="border rounded-lg p-4"><legend class="text-sm font-bold text-gray-700 px-2">Classificação</legend>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div><label class="block text-xs font-semibold text-gray-600 mb-1">Ótimo (mín %)</label><input id="cfg-otimo" type="number" class="w-full border rounded-lg px-3 py-2 text-sm" value="95"></div>
+                  <div><label class="block text-xs font-semibold text-gray-600 mb-1">Bom (mín %)</label><input id="cfg-bom" type="number" class="w-full border rounded-lg px-3 py-2 text-sm" value="80"></div>
+                  <div><label class="block text-xs font-semibold text-gray-600 mb-1">Regular (mín %)</label><input id="cfg-regular" type="number" class="w-full border rounded-lg px-3 py-2 text-sm" value="60"></div>
+                  <div><label class="block text-xs font-semibold text-gray-600 mb-1">Ruim (abaixo de)</label><input id="cfg-ruim" type="number" class="w-full border rounded-lg px-3 py-2 text-sm" value="60" disabled></div>
+                </div>
+              </fieldset>
+              <fieldset class="border rounded-lg p-4"><legend class="text-sm font-bold text-gray-700 px-2 flex items-center gap-1.5">🔗 Link Público</legend>
+                <p class="text-xs text-gray-500 mb-3">Compartilhe este link com qualquer pessoa da empresa — <strong>não precisa fazer login</strong>. Dá acesso somente ao Ranking, à Coleção de Selos e ao Manual do Jogo (sem dados sensíveis, fotos ou observações internas).</p>
+                <div class="flex flex-col sm:flex-row gap-2">
+                  <input id="public-link-input" readonly class="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-700" value="">
+                  <button type="button" id="copy-public-link-btn" class="px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 flex items-center gap-2 flex-shrink-0"><i data-lucide="copy" class="w-4 h-4"></i> Copiar Link</button>
+                </div>
+                <p id="copy-public-link-msg" class="text-xs text-green-600 mt-2 hidden">✓ Link copiado!</p>
+              </fieldset>
+              <fieldset class="border rounded-lg p-4"><legend class="text-sm font-bold text-gray-700 px-2">PDF</legend>
+                <div class="space-y-2">
+                  <label class="flex items-center gap-2 text-sm"><input id="cfg-pdf-fotos" type="checkbox" checked> Exibir fotos no PDF</label>
+                  <label class="flex items-center gap-2 text-sm"><input id="cfg-pdf-obs" type="checkbox" checked> Exibir observações no PDF</label>
+                </div>
+              </fieldset>
+              <fieldset id="users-fieldset" class="border rounded-lg p-4 hidden">
+                <legend class="text-sm font-bold text-gray-700 px-2 flex items-center gap-1.5">👥 Usuários</legend>
+                <div class="flex justify-end mb-3">
+                  <button type="button" id="add-user-btn" class="px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 flex items-center gap-2"><i data-lucide="user-plus" class="w-4 h-4"></i> Novo usuário</button>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm">
+                    <thead><tr class="bg-gray-50 text-left"><th class="p-2">Foto</th><th class="p-2">Nome</th><th class="p-2">Empresa</th><th class="p-2">Departamento</th><th class="p-2">E-mail</th><th class="p-2">Perfil</th><th class="p-2">Status</th><th class="p-2">Último acesso</th><th class="p-2 w-40">Ações</th></tr></thead>
+                    <tbody id="users-table"></tbody>
+                  </table>
+                </div>
+                <p id="users-empty" class="text-gray-400 text-sm text-center py-6 hidden">Nenhum usuário cadastrado.</p>
+              </fieldset>
+              <fieldset id="users-forbidden" class="border rounded-lg p-4 bg-gray-50 hidden">
+                <legend class="text-sm font-bold text-gray-700 px-2">👥 Usuários</legend>
+                <p class="text-sm text-gray-500">Apenas administradores podem gerenciar usuários.</p>
+              </fieldset>
+              <fieldset id="activity-log-fieldset" class="border rounded-lg p-4 hidden">
+                <legend class="text-sm font-bold text-gray-700 px-2 flex items-center gap-1.5">📜 Log de Alterações</legend>
+                <p class="text-xs text-gray-500 mb-3">Registro de exclusões de verificações — quem excluiu, quando e o que foi excluído.</p>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm">
+                    <thead><tr class="bg-gray-50 text-left"><th class="p-2">Data/Hora</th><th class="p-2">Usuário</th><th class="p-2">Ação</th><th class="p-2">Descrição</th></tr></thead>
+                    <tbody id="activity-log-table"></tbody>
+                  </table>
+                </div>
+                <p id="activity-log-empty" class="text-gray-400 text-sm text-center py-6 hidden">Nenhuma alteração registrada ainda.</p>
+              </fieldset>
+              <button id="save-config-btn" class="px-5 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700">Salvar Configurações</button>
+              <span id="config-msg" class="text-sm text-green-600 ml-3 hidden">✓ Salvo!</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="mx-6 mt-8 mb-4 pt-4 border-t border-gray-200 text-center text-xs font-semibold text-gray-400">
+        Semana ODS na Prática · Em apoio ao ODS 12 e ao ODS 18
+      </footer>
+
+    </div>
+  </div>
+
+  <!-- MODALS -->
+  <div id="dept-modal" class="modal-overlay">
+    <form id="dept-form" class="bg-white rounded-xl p-6 w-full max-w-md space-y-3">
+      <h3 class="font-bold text-lg" id="dept-modal-title">Novo Departamento</h3>
+      <label for="dept-name" class="block text-xs font-semibold text-gray-700">Nome *</label><input id="dept-name" class="w-full border rounded-lg px-3 py-2 text-sm" required>
+      <label for="dept-responsible" class="block text-xs font-semibold text-gray-700">Responsável</label><input id="dept-responsible" class="w-full border rounded-lg px-3 py-2 text-sm">
+      <div class="flex gap-2 pt-2"><button type="submit" class="flex-1 bg-emerald-600 text-white py-2 rounded-lg font-semibold text-sm">Salvar</button><button type="button" id="cancel-dept" class="flex-1 bg-gray-200 py-2 rounded-lg font-semibold text-sm">Cancelar</button></div>
+      <input type="hidden" id="dept-edit-id" value="">
+    </form>
+  </div>
+  <div id="criterion-modal" class="modal-overlay">
+    <form id="criterion-form" class="bg-white rounded-xl p-6 w-full max-w-md space-y-3">
+      <h3 class="font-bold text-lg" id="criterion-modal-title">Novo Critério</h3>
+      <label for="crit-checklist" class="block text-xs font-semibold text-gray-700">Checklist *</label><select id="crit-checklist" class="w-full border rounded-lg px-3 py-2 text-sm" required><option value="">Selecione</option><option>Escritório</option><option>Área Comum</option></select>
+      <label for="crit-senso" class="block text-xs font-semibold text-gray-700">Senso *</label><select id="crit-senso" class="w-full border rounded-lg px-3 py-2 text-sm" required><option value="">Selecione</option><option>Utilização</option><option>Limpeza</option><option>Padronização</option><option>Disciplina</option></select>
+      <label for="crit-item" class="block text-xs font-semibold text-gray-700">Item *</label><input id="crit-item" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Ex: 1.1" required>
+      <label for="crit-question" class="block text-xs font-semibold text-gray-700">Pergunta *</label><input id="crit-question" class="w-full border rounded-lg px-3 py-2 text-sm" required>
+      <label for="crit-criterion" class="block text-xs font-semibold text-gray-700">Critério de Verificação</label><input id="crit-criterion" class="w-full border rounded-lg px-3 py-2 text-sm">
+      <div class="flex gap-2 pt-2"><button type="submit" class="flex-1 bg-emerald-600 text-white py-2 rounded-lg font-semibold text-sm">Salvar</button><button type="button" id="cancel-criterion" class="flex-1 bg-gray-200 py-2 rounded-lg font-semibold text-sm">Cancelar</button></div>
+      <input type="hidden" id="crit-edit-id" value="">
+    </form>
+  </div>
+  <div id="cancel-confirm-modal" class="modal-overlay">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md">
+      <h3 class="font-bold text-lg text-gray-800 mb-2">Cancelar Verificação?</h3>
+      <p class="text-sm text-gray-600 mb-6">Todos os dados não salvos serão perdidos.</p>
+      <div class="flex gap-2"><button id="cancel-back-btn" class="flex-1 px-4 py-2 bg-gray-200 text-sm font-semibold rounded-lg">Voltar</button><button id="cancel-yes-btn" class="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg">Confirmar</button></div>
+    </div>
+  </div>
+  <div id="report-modal" class="modal-overlay" style="overflow-y:auto">
+    <div class="bg-white rounded-xl p-6 w-full max-w-4xl my-8">
+      <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-xl text-gray-800" id="report-title">Relatório</h3><button id="close-report-btn" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button></div>
+      <div id="report-content"></div>
+      <div class="flex gap-2 pt-4 border-t mt-4">
+        <button id="report-pdf-btn" class="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg flex items-center justify-center gap-2"><i data-lucide="file-text" class="w-4 h-4"></i> Gerar PDF</button>
+        <button id="report-close-btn" class="flex-1 px-4 py-2 bg-gray-200 text-sm font-semibold rounded-lg">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="badge-modal" class="modal-overlay">
+    <div class="bg-white rounded-xl p-6 w-full max-w-sm text-center">
+      <div class="flex justify-end -mt-2 -mr-2 mb-1"><button id="badge-modal-close" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button></div>
+      <div id="badge-modal-medal" class="selo-modal-medal">🏅</div>
+      <h3 id="badge-modal-name" class="font-extrabold text-lg text-gray-800">Nome do Selo</h3>
+      <p id="badge-modal-stars" class="selo-stars text-sm mt-1">⭐⭐⭐</p>
+      <p id="badge-modal-desc" class="text-sm text-gray-600 mt-3">Descrição do selo.</p>
+      <div id="badge-modal-progress-wrap" class="mt-4 hidden">
+        <div class="selo-category-track"><div id="badge-modal-progress-fill" class="selo-category-fill" style="width:0%"></div></div>
+        <p id="badge-modal-progress-label" class="text-xs font-bold text-gray-500 mt-1"></p>
+      </div>
+      <div id="badge-modal-stats" class="mt-2 text-left"></div>
+      <div id="badge-modal-status" class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold"></div>
+    </div>
+  </div>
+
+  <div id="user-modal" class="modal-overlay">
+    <form id="user-form" class="bg-white rounded-xl p-6 w-full max-w-md space-y-3 max-h-[90vh] overflow-y-auto">
+      <h3 class="font-bold text-lg" id="user-modal-title">Novo Usuário</h3>
+      <div class="flex flex-col items-center gap-2">
+        <div id="user-photo-preview" class="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200"><i data-lucide="user" class="w-8 h-8 text-gray-400"></i></div>
+        <label class="text-xs font-semibold text-emerald-600 cursor-pointer">Escolher foto<input type="file" id="user-photo-input" accept="image/*" class="hidden"></label>
+      </div>
+      <label for="user-name" class="block text-xs font-semibold text-gray-700">Nome *</label><input id="user-name" class="w-full border rounded-lg px-3 py-2 text-sm" required>
+      <label for="user-email" class="block text-xs font-semibold text-gray-700">E-mail *</label><input id="user-email" type="email" class="w-full border rounded-lg px-3 py-2 text-sm" required>
+      <div id="user-company-wrap" class="hidden"><label for="user-company" class="block text-xs font-semibold text-gray-700">Empresa *</label><select id="user-company" class="w-full border rounded-lg px-3 py-2 text-sm"></select><p id="user-company-suggestion" class="text-[11px] text-emerald-700 mt-1 hidden"></p></div>
+      <label for="user-dept" class="block text-xs font-semibold text-gray-700">Departamento</label><select id="user-dept" class="w-full border rounded-lg px-3 py-2 text-sm"><option value="">Selecione</option></select>
+      <label for="user-role" class="block text-xs font-semibold text-gray-700">Cargo</label><input id="user-role" class="w-full border rounded-lg px-3 py-2 text-sm">
+      <label class="block text-xs font-semibold text-gray-700">Perfil *</label>
+      <div class="flex gap-4">
+        <label class="flex items-center gap-1.5 text-sm"><input type="radio" name="user-profile" value="admin"> Administrador da empresa</label>
+        <label class="flex items-center gap-1.5 text-sm"><input type="radio" name="user-profile" value="auditor" checked> Responsável pela Verificação</label>
+      </div>
+      <div id="user-password-wrap">
+        <label for="user-password" class="block text-xs font-semibold text-gray-700">Senha temporária *</label>
+        <input id="user-password" type="text" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Mínimo 4 caracteres">
+      </div>
+      <label class="block text-xs font-semibold text-gray-700">Status</label>
+      <div class="flex gap-4">
+        <label class="flex items-center gap-1.5 text-sm"><input type="radio" name="user-status" value="active" checked> Ativo</label>
+        <label class="flex items-center gap-1.5 text-sm"><input type="radio" name="user-status" value="inactive"> Inativo</label>
+      </div>
+      <p id="user-form-error" class="text-xs font-semibold text-red-600 hidden"></p>
+      <div class="flex gap-2 pt-2"><button type="submit" class="flex-1 bg-emerald-600 text-white py-2 rounded-lg font-semibold text-sm">Salvar</button><button type="button" id="cancel-user" class="flex-1 bg-gray-200 py-2 rounded-lg font-semibold text-sm">Cancelar</button></div>
+      <input type="hidden" id="user-edit-id" value="">
+      <input type="hidden" id="user-photo-data" value="">
+    </form>
+  </div>
+  <div id="reset-password-modal" class="modal-overlay">
+    <form id="reset-password-form" class="bg-white rounded-xl p-6 w-full max-w-sm space-y-3">
+      <h3 class="font-bold text-lg">Resetar Senha</h3>
+      <p class="text-sm text-gray-500" id="reset-password-user-label"></p>
+      <label for="reset-password-input" class="block text-xs font-semibold text-gray-700">Nova senha temporária *</label>
+      <input id="reset-password-input" type="text" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Mínimo 4 caracteres" required>
+      <p id="reset-password-error" class="text-xs font-semibold text-red-600 hidden"></p>
+      <div class="flex gap-2 pt-2"><button type="submit" class="flex-1 bg-emerald-600 text-white py-2 rounded-lg font-semibold text-sm">Resetar</button><button type="button" id="cancel-reset-password" class="flex-1 bg-gray-200 py-2 rounded-lg font-semibold text-sm">Cancelar</button></div>
+      <input type="hidden" id="reset-password-user-id" value="">
+    </form>
+  </div>
+  <div id="delete-user-confirm-modal" class="modal-overlay">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md">
+      <h3 class="font-bold text-lg text-gray-800 mb-2">Excluir usuário?</h3>
+      <p class="text-sm text-gray-600 mb-6" id="delete-user-confirm-text">Essa ação não pode ser desfeita.</p>
+      <div class="flex gap-2"><button type="button" id="delete-user-back-btn" class="flex-1 px-4 py-2 bg-gray-200 text-sm font-semibold rounded-lg">Voltar</button><button type="button" id="delete-user-yes-btn" class="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg">Excluir</button></div>
+    </div>
+  </div>
+  <div id="delete-audit-confirm-modal" class="modal-overlay">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md">
+      <h3 class="font-bold text-lg text-gray-800 mb-2">Excluir verificação?</h3>
+      <p class="text-sm text-gray-600 mb-2" id="delete-audit-confirm-text">Essa ação não pode ser desfeita.</p>
+      <p class="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4"><i data-lucide="info" class="w-3.5 h-3.5 inline"></i> Isso também afeta o ranking, os selos e o histórico de evolução do departamento. A exclusão fica registrada no Log de Alterações.</p>
+      <div class="flex gap-2"><button type="button" id="delete-audit-back-btn" class="flex-1 px-4 py-2 bg-gray-200 text-sm font-semibold rounded-lg">Voltar</button><button type="button" id="delete-audit-yes-btn" class="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg">Excluir</button></div>
+    </div>
+  </div>
+
+  <!-- Substitui o dataSdk do Canva por chamadas à API Flask -->
+  <script src="/static/data-sdk-shim.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>
