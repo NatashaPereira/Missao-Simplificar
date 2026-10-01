@@ -1367,6 +1367,160 @@ function criterionBadgeProgress(audit,badge){
 
 function sortAuditsByDate(audits){return [...audits].sort((a,b)=>(a.audit_timestamp||a.audit_date||'').localeCompare(b.audit_timestamp||b.audit_date||''))}
 
+// ============================================================
+// CONFIGURAÇÃO DE TEMPORADAS
+// Royal Cargo = 6 meses
+// Demais empresas = 1 mês
+// ============================================================
+
+const SEASON_DURATION_MONTHS = {
+  'Royal Cargo': 6,
+  'AMTrans': 1,
+  'Rentalog': 1,
+  'Next': 1,
+  'DC Logistics': 1
+};
+
+function getCurrentCompanyName(){
+  return getConfig('empresa_nome','Royal Cargo');
+}
+
+function getSeasonDurationMonths(){
+  const empresa = getCurrentCompanyName();
+
+  // Royal = 6 meses
+  // Demais empresas = 1 mês
+  return SEASON_DURATION_MONTHS[empresa] || 1;
+}
+
+function addMonths(date, months){
+  const d = new Date(date);
+  d.setMonth(d.getMonth() + months);
+  return d;
+}
+
+function getSeasonForDate(dateValue){
+  const duration = getSeasonDurationMonths();
+
+  const date = new Date(dateValue);
+  if(isNaN(date.getTime())) return null;
+
+  // Todas as temporadas começam em 01/09/2026
+  const baseStart = new Date(2026, 8, 1); // 01/09/2026
+
+  // Calcula quantos meses se passaram desde o início oficial
+  const monthsDiff =
+    (date.getFullYear() - baseStart.getFullYear()) * 12 +
+    (date.getMonth() - baseStart.getMonth());
+
+  // Data de início da temporada correspondente
+  const seasonNumber = Math.floor(monthsDiff / duration);
+
+  const seasonStart = new Date(baseStart);
+  seasonStart.setMonth(
+    baseStart.getMonth() + (seasonNumber * duration)
+  );
+
+  // Data de término = último dia antes da próxima temporada
+  const seasonEnd = new Date(seasonStart);
+  seasonEnd.setMonth(seasonStart.getMonth() + duration);
+  seasonEnd.setDate(0);
+  seasonEnd.setHours(23,59,59,999);
+
+  return {
+    start: seasonStart,
+    end: seasonEnd,
+    duration
+  };
+}
+  
+
+function isSeasonClosed(season){
+  return new Date() > season.end;
+}
+
+function auditBelongsToSeason(audit, season){
+  if(!audit || !audit.audit_date || !season) return false;
+
+  const d = new Date(audit.audit_date + 'T23:59:59');
+
+  return d >= season.start && d <= season.end;
+}
+
+function getSeasonRanking(season){
+
+  const audits = getAudits();
+  const depts = getDepts();
+
+  if(!season || !depts.length) return [];
+
+  const seasonAudits = audits.filter(a =>
+    auditBelongsToSeason(a, season)
+  );
+
+  const commonAudits = seasonAudits.filter(
+    a => a.audit_type === 'Área Comum'
+  );
+
+  const latestCommon = commonAudits.length
+    ? commonAudits.reduce((latest,current) =>
+        (current.audit_timestamp || '') >
+        (latest.audit_timestamp || '')
+          ? current
+          : latest
+      )
+    : null;
+
+  const ranking = [];
+
+  depts.forEach(dept => {
+
+    const officeAudits = seasonAudits.filter(
+      a =>
+        a.audit_type === 'Escritório' &&
+        a.department === dept.name
+    );
+
+    const latestOffice = officeAudits.length
+      ? officeAudits.reduce((latest,current) =>
+          (current.audit_timestamp || '') >
+          (latest.audit_timestamp || '')
+            ? current
+            : latest
+        )
+      : null;
+
+    if(!latestOffice && !latestCommon) return;
+
+    const officeAvg = latestOffice
+      ? parseFloat(latestOffice.overall_average) || 0
+      : 0;
+
+    const commonAvg = latestCommon
+      ? parseFloat(latestCommon.overall_average) || 0
+      : 0;
+
+    let avg = 0;
+
+    if(officeAvg > 0 && commonAvg > 0){
+      avg = (officeAvg + commonAvg) / 2;
+    }else if(officeAvg > 0){
+      avg = officeAvg;
+    }else{
+      avg = commonAvg;
+    }
+
+    ranking.push({
+      name: dept.name,
+      avg
+    });
+
+  });
+
+  return ranking.sort((a,b) => b.avg - a.avg);
+}
+
+
 // Retorna {unlocked,count,lastDate,lastValue,progress,progressLabel}
 function getBadgeStatus(badge,deptAudits,deptName,allStatusesForLegend){
   const sorted=sortAuditsByDate(deptAudits);
@@ -1411,20 +1565,64 @@ function getBadgeStatus(badge,deptAudits,deptName,allStatusesForLegend){
       lastValue:gain,progress:Math.min(100,Math.round((Math.max(0,gain)/badge.minGain)*100)),
       progressLabel:`Evolução atual: ${gain>=0?'+':''}${gain.toFixed(1)} pontos`};
   }
-  if(badge.customType==='topRanked'){
-    const allDepts=getDepts().map(d=>d.name);
-    const avgFor=(name)=>{
-      const as=getAudits().filter(a=>a.department===name&&a.audit_type==='Escritório');
-      if(!as.length)return -1;
-      return as.reduce((s,a)=>s+parseFloat(a.overall_average||0),0)/as.length;
+
+if(badge.customType==='topRanked'){
+
+  const now = new Date();
+
+  const currentSeason = getSeasonForDate(now);
+
+  // Ranking da temporada atual
+  const currentRanking = getSeasonRanking(currentSeason);
+
+  const position = currentRanking.findIndex(
+    r => r.name === deptName
+  ) + 1;
+
+  // A temporada ainda está acontecendo.
+  // Ninguém recebe o selo ainda.
+  if(!isSeasonClosed(currentSeason)){
+
+    return {
+      unlocked:false,
+      count:0,
+      lastDate:sorted.length
+        ? sorted[sorted.length-1].audit_date
+        : null,
+      lastValue:position,
+      progress:0,
+      progressLabel:position > 0
+        ? `Temporada em andamento · ${position}º lugar`
+        : 'Temporada em andamento'
     };
-    const ranking=allDepts.map(n=>({name:n,avg:avgFor(n)})).filter(r=>r.avg>=0).sort((a,b)=>b.avg-a.avg);
-    const champion=ranking.length?ranking[0].name:null;
-    const unlocked=deptName&&champion===deptName;
-    const pos=ranking.findIndex(r=>r.name===deptName)+1;
-    return{unlocked,count:unlocked?1:0,lastDate:sorted.length?sorted[sorted.length-1].audit_date:null,lastValue:pos,
-      progress:unlocked?100:0,progressLabel:pos>0?`Posição atual no ranking: ${pos}º`:'Sem verificações suficientes'};
+
   }
+
+  // Temporada encerrada.
+  // O primeiro colocado é o campeão.
+  const champion = currentRanking.length
+    ? currentRanking[0].name
+    : null;
+
+  const unlocked =
+    !!deptName &&
+    champion === deptName;
+
+  return {
+    unlocked,
+    count:unlocked ? 1 : 0,
+    lastDate:sorted.length
+      ? sorted[sorted.length-1].audit_date
+      : null,
+    lastValue:position,
+    progress:unlocked ? 100 : 0,
+    progressLabel:unlocked
+      ? 'Campeão da temporada'
+      : position > 0
+        ? `${position}º lugar na temporada`
+        : 'Sem verificações suficientes'
+  };
+}
   if(badge.customType==='legend'){
     const others=BADGES.filter(b=>b.id!==badge.id);
     const unlocked=others.length>0&&others.every(b=>allStatusesForLegend[b.id]&&allStatusesForLegend[b.id].unlocked);
