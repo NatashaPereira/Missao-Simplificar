@@ -1320,7 +1320,16 @@ const BADGES=[
 
   // Especiais
   {id:'auditoria-perfeita',category:'especiais',name:'Verificação Perfeita',icon:'🏆',stars:5,type:'pillar',field:'overall_average',threshold:100,description:'Obtenha 100% de média geral em uma verificação.'},
-  {id:'campeao-temporada',category:'especiais',name:'Campeão da Temporada',icon:'👑',stars:5,type:'special',customType:'topRanked',description:'Seja o departamento nº 1 no ranking geral.'},
+{
+  id:'campeao-temporada',
+  category:'especiais',
+  name:'Campeão da Temporada',
+  icon:'👑',
+  stars:5,
+  type:'special',
+  customType:'topRanked',
+  description:'Seja o departamento nº 1 no ranking ao final da temporada.'
+},
   {id:'consistencia',category:'especiais',name:'Consistência',icon:'🔥',stars:4,type:'special',customType:'consecutiveAbove',threshold:90,streak:3,description:'Alcance 90%+ de média geral em 3 verificações seguidas.'},
   {id:'melhor-evolucao',category:'especiais',name:'Melhor Evolução',icon:'🚀',stars:4,type:'special',customType:'evolution',minGain:15,description:'Melhore sua média geral em pelo menos 15 pontos entre a primeira e a última verificação.'},
   {id:'lenda-missao',category:'especiais',name:'Lenda do Missão Simplificar',icon:'💎',stars:5,type:'special',customType:'legend',description:'Desbloqueie todos os outros selos.'},
