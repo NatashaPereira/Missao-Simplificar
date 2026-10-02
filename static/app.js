@@ -1462,9 +1462,6 @@ function auditBelongsToSeason(audit, season){
 
 function getSeasonRanking(season){
 
-
-function getSeasonRanking(season){
-
   const audits = getAudits();
   const depts = getDepts();
 
