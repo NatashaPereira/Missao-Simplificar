@@ -1565,23 +1565,97 @@ function getBadgeStatus(badge,deptAudits,deptName,allStatusesForLegend){
       lastValue:gain,progress:Math.min(100,Math.round((Math.max(0,gain)/badge.minGain)*100)),
       progressLabel:`Evolução atual: ${gain>=0?'+':''}${gain.toFixed(1)} pontos`};
   }
-
 if(badge.customType==='topRanked'){
+
+  // ============================================================
+  // CAMPEÃO DA TEMPORADA
+  //
+  // Regras:
+  // - Temporada em andamento = ninguém recebe o selo.
+  // - Temporada encerrada = 1º colocado recebe o selo.
+  // - O selo é histórico e acumula:
+  //   1 campeonato = 1x
+  //   2 campeonatos = 2x
+  //   3 campeonatos = 3x
+  //
+  // Importante:
+  // O ranking usado é o ranking FINAL de cada temporada,
+  // e não a posição na primeira avaliação.
+  // ============================================================
 
   const now = new Date();
 
-  const currentSeason = getSeasonForDate(now);
+  const duration = getSeasonDurationMonths();
 
-  // Ranking da temporada atual
-  const currentRanking = getSeasonRanking(currentSeason);
+  // Início oficial das temporadas
+  const baseStart = new Date(2026, 8, 1); // 01/09/2026
+  baseStart.setHours(0,0,0,0);
 
-  const position = currentRanking.findIndex(
-    r => r.name === deptName
-  ) + 1;
+  // Descobre quantos períodos já existem desde o início
+  const monthsDiff =
+    (now.getFullYear() - baseStart.getFullYear()) * 12 +
+    (now.getMonth() - baseStart.getMonth());
 
-  // A temporada ainda está acontecendo.
-  // Ninguém recebe o selo ainda.
-  if(!isSeasonClosed(currentSeason)){
+  const currentSeasonNumber =
+    Math.floor(monthsDiff / duration);
+
+  let championshipCount = 0;
+  let lastChampionshipDate = null;
+  let lastChampion = null;
+
+  // Percorre TODAS as temporadas já iniciadas
+  // e considera somente as que já terminaram.
+  for(let seasonNumber = 0; seasonNumber <= currentSeasonNumber; seasonNumber++){
+
+    const seasonStart = new Date(baseStart);
+    seasonStart.setMonth(
+      baseStart.getMonth() + (seasonNumber * duration)
+    );
+    seasonStart.setHours(0,0,0,0);
+
+    const seasonEnd = new Date(seasonStart);
+    seasonEnd.setMonth(
+      seasonStart.getMonth() + duration
+    );
+    seasonEnd.setDate(0);
+    seasonEnd.setHours(23,59,59,999);
+
+    // Temporada ainda em andamento:
+    // NÃO pode conceder o selo.
+    if(now <= seasonEnd){
+      continue;
+    }
+
+    const season = {
+      start: seasonStart,
+      end: seasonEnd,
+      duration
+    };
+
+    const ranking = getSeasonRanking(season);
+
+    if(!ranking.length){
+      continue;
+    }
+
+    // O campeão é o 1º colocado NO FINAL da temporada.
+    const champion = ranking[0];
+
+    if(!champion || !champion.name){
+      continue;
+    }
+
+    if(champion.name === deptName){
+      championshipCount++;
+      lastChampionshipDate = seasonEnd;
+      lastChampion = champion.name;
+    }
+  }
+
+  // ============================================================
+  // NENHUM CAMPEONATO
+  // ============================================================
+  if(championshipCount === 0){
 
     return {
       unlocked:false,
@@ -1589,38 +1663,27 @@ if(badge.customType==='topRanked'){
       lastDate:sorted.length
         ? sorted[sorted.length-1].audit_date
         : null,
-      lastValue:position,
+      lastValue:0,
       progress:0,
-      progressLabel:position > 0
-        ? `Temporada em andamento · ${position}º lugar`
-        : 'Temporada em andamento'
+      progressLabel:'Ainda não foi campeão de uma temporada'
     };
-
   }
 
-  // Temporada encerrada.
-  // O primeiro colocado é o campeão.
-  const champion = currentRanking.length
-    ? currentRanking[0].name
-    : null;
-
-  const unlocked =
-    !!deptName &&
-    champion === deptName;
-
+  // ============================================================
+  // CAMPEÃO HISTÓRICO
+  // ============================================================
   return {
-    unlocked,
-    count:unlocked ? 1 : 0,
-    lastDate:sorted.length
-      ? sorted[sorted.length-1].audit_date
+    unlocked:true,
+    count:championshipCount,
+    lastDate:lastChampionshipDate
+      ? lastChampionshipDate.toISOString().slice(0,10)
       : null,
-    lastValue:position,
-    progress:unlocked ? 100 : 0,
-    progressLabel:unlocked
-      ? 'Campeão da temporada'
-      : position > 0
-        ? `${position}º lugar na temporada`
-        : 'Sem verificações suficientes'
+    lastValue:1,
+    progress:100,
+    progressLabel:
+      championshipCount === 1
+        ? 'Campeão de 1 temporada'
+        : `Campeão de ${championshipCount} temporadas`
   };
 }
   if(badge.customType==='legend'){
