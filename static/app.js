@@ -1382,7 +1382,29 @@ const SEASON_DURATION_MONTHS = {
 };
 
 function getCurrentCompanyName(){
-  return getConfig('empresa_nome','Royal Cargo');
+
+  // A empresa atual vem da sessão do usuário.
+  // Isso é atualizado quando o superadministrador
+  // troca a empresa no seletor.
+
+  if(
+    typeof currentUserInfo !== 'undefined' &&
+    currentUserInfo &&
+    currentUserInfo.company &&
+    currentUserInfo.company.name
+  ){
+    return currentUserInfo.company.name;
+  }
+
+  // Fallback para instalações antigas que ainda
+  // possuam empresa_nome configurada.
+  const configured = getConfig('empresa_nome','');
+
+  if(configured){
+    return configured;
+  }
+
+  return 'Royal Cargo';
 }
 
 function getSeasonDurationMonths(){
