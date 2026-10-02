@@ -1400,40 +1400,53 @@ function addMonths(date, months){
 }
 
 function getSeasonForDate(dateValue){
+
   const duration = getSeasonDurationMonths();
 
   const date = new Date(dateValue);
+
   if(isNaN(date.getTime())) return null;
 
-  // Todas as temporadas começam em 01/09/2026
-  const baseStart = new Date(2026, 8, 1); // 01/09/2026
+  // TODAS as empresas iniciam a primeira temporada em 01/09/2026
+  const baseStart = new Date(2026, 8, 1);
+  baseStart.setHours(0,0,0,0);
 
-  // Calcula quantos meses se passaram desde o início oficial
   const monthsDiff =
     (date.getFullYear() - baseStart.getFullYear()) * 12 +
     (date.getMonth() - baseStart.getMonth());
 
-  // Data de início da temporada correspondente
-  const seasonNumber = Math.floor(monthsDiff / duration);
+  const seasonNumber =
+    Math.floor(monthsDiff / duration);
 
   const seasonStart = new Date(baseStart);
+
   seasonStart.setMonth(
     baseStart.getMonth() + (seasonNumber * duration)
   );
 
-  // Data de término = último dia antes da próxima temporada
-  const seasonEnd = new Date(seasonStart);
-  seasonEnd.setMonth(seasonStart.getMonth() + duration);
+  seasonStart.setHours(0,0,0,0);
+
+  const nextSeasonStart = new Date(seasonStart);
+
+  nextSeasonStart.setMonth(
+    seasonStart.getMonth() + duration
+  );
+
+  nextSeasonStart.setHours(0,0,0,0);
+
+  // Último instante antes da próxima temporada
+  const seasonEnd = new Date(nextSeasonStart);
+
   seasonEnd.setDate(0);
   seasonEnd.setHours(23,59,59,999);
 
   return {
     start: seasonStart,
     end: seasonEnd,
-    duration
+    duration,
+    number: seasonNumber
   };
 }
-  
 
 function isSeasonClosed(season){
   return new Date() > season.end;
@@ -1446,6 +1459,9 @@ function auditBelongsToSeason(audit, season){
 
   return d >= season.start && d <= season.end;
 }
+
+function getSeasonRanking(season){
+
 
 function getSeasonRanking(season){
 
@@ -1570,28 +1586,33 @@ if(badge.customType==='topRanked'){
   // ============================================================
   // CAMPEÃO DA TEMPORADA
   //
-  // Regras:
-  // - Temporada em andamento = ninguém recebe o selo.
-  // - Temporada encerrada = 1º colocado recebe o selo.
-  // - O selo é histórico e acumula:
-  //   1 campeonato = 1x
-  //   2 campeonatos = 2x
-  //   3 campeonatos = 3x
+  // Todas as temporadas começam em 01/09/2026.
   //
-  // Importante:
-  // O ranking usado é o ranking FINAL de cada temporada,
-  // e não a posição na primeira avaliação.
+  // Royal Cargo:
+  //   01/09/2026 → 28/02/2027
+  //
+  // Demais empresas:
+  //   01/09/2026 → 30/09/2026
+  //   01/10/2026 → 31/10/2026
+  //   01/11/2026 → 30/11/2026
+  //   etc.
+  //
+  // Somente temporadas ENCERRADAS podem conceder o selo.
+  //
+  // Cada temporada vencida = +1 no contador.
   // ============================================================
 
   const now = new Date();
 
   const duration = getSeasonDurationMonths();
 
-  // Início oficial das temporadas
-  const baseStart = new Date(2026, 8, 1); // 01/09/2026
+  const baseStart = new Date(2026, 8, 1);
   baseStart.setHours(0,0,0,0);
 
-  // Descobre quantos períodos já existem desde o início
+  // ------------------------------------------------------------
+  // Quantas temporadas já começaram?
+  // ------------------------------------------------------------
+
   const monthsDiff =
     (now.getFullYear() - baseStart.getFullYear()) * 12 +
     (now.getMonth() - baseStart.getMonth());
@@ -1601,27 +1622,47 @@ if(badge.customType==='topRanked'){
 
   let championshipCount = 0;
   let lastChampionshipDate = null;
-  let lastChampion = null;
 
-  // Percorre TODAS as temporadas já iniciadas
-  // e considera somente as que já terminaram.
-  for(let seasonNumber = 0; seasonNumber <= currentSeasonNumber; seasonNumber++){
+  // ------------------------------------------------------------
+  // Analisa TODAS as temporadas desde 01/09/2026
+  // ------------------------------------------------------------
 
+  for(
+    let seasonNumber = 0;
+    seasonNumber <= currentSeasonNumber;
+    seasonNumber++
+  ){
+
+    // Início da temporada
     const seasonStart = new Date(baseStart);
+
     seasonStart.setMonth(
-      baseStart.getMonth() + (seasonNumber * duration)
+      baseStart.getMonth() +
+      (seasonNumber * duration)
     );
+
     seasonStart.setHours(0,0,0,0);
 
-    const seasonEnd = new Date(seasonStart);
-    seasonEnd.setMonth(
+    // Início da próxima temporada
+    const nextSeasonStart = new Date(seasonStart);
+
+    nextSeasonStart.setMonth(
       seasonStart.getMonth() + duration
     );
+
+    nextSeasonStart.setHours(0,0,0,0);
+
+    // Último dia da temporada atual
+    const seasonEnd = new Date(nextSeasonStart);
+
     seasonEnd.setDate(0);
     seasonEnd.setHours(23,59,59,999);
 
-    // Temporada ainda em andamento:
-    // NÃO pode conceder o selo.
+    // ----------------------------------------------------------
+    // Se a temporada ainda estiver aberta:
+    // NÃO concede selo.
+    // ----------------------------------------------------------
+
     if(now <= seasonEnd){
       continue;
     }
@@ -1629,63 +1670,87 @@ if(badge.customType==='topRanked'){
     const season = {
       start: seasonStart,
       end: seasonEnd,
-      duration
+      duration,
+      number: seasonNumber
     };
+
+    // ----------------------------------------------------------
+    // CALCULA O RANKING FINAL DA TEMPORADA
+    // ----------------------------------------------------------
 
     const ranking = getSeasonRanking(season);
 
-    if(!ranking.length){
+    if(!ranking || ranking.length === 0){
       continue;
     }
 
-    // O campeão é o 1º colocado NO FINAL da temporada.
+    // Primeiro colocado = campeão
     const champion = ranking[0];
 
     if(!champion || !champion.name){
       continue;
     }
 
-    if(champion.name === deptName){
+    // ----------------------------------------------------------
+    // Se este departamento foi o campeão:
+    // soma 1 campeonato.
+    // ----------------------------------------------------------
+
+    if(
+      String(champion.name).trim() ===
+      String(deptName).trim()
+    ){
+
       championshipCount++;
-      lastChampionshipDate = seasonEnd;
-      lastChampion = champion.name;
+
+      lastChampionshipDate =
+        seasonEnd.toISOString().slice(0,10);
     }
+
   }
 
   // ============================================================
-  // NENHUM CAMPEONATO
+  // NUNCA FOI CAMPEÃO
   // ============================================================
+
   if(championshipCount === 0){
 
     return {
       unlocked:false,
       count:0,
-      lastDate:sorted.length
-        ? sorted[sorted.length-1].audit_date
-        : null,
+      lastDate:null,
       lastValue:0,
       progress:0,
-      progressLabel:'Ainda não foi campeão de uma temporada'
+      progressLabel:
+        'Ainda não foi campeão de uma temporada'
     };
+
   }
 
   // ============================================================
   // CAMPEÃO HISTÓRICO
   // ============================================================
+
   return {
     unlocked:true,
+
+    // Quantas temporadas esse departamento venceu
     count:championshipCount,
-    lastDate:lastChampionshipDate
-      ? lastChampionshipDate.toISOString().slice(0,10)
-      : null,
+
+    // Data da última temporada vencida
+    lastDate:lastChampionshipDate,
+
     lastValue:1,
+
     progress:100,
+
     progressLabel:
       championshipCount === 1
         ? 'Campeão de 1 temporada'
         : `Campeão de ${championshipCount} temporadas`
   };
 }
+  
   if(badge.customType==='legend'){
     const others=BADGES.filter(b=>b.id!==badge.id);
     const unlocked=others.length>0&&others.every(b=>allStatusesForLegend[b.id]&&allStatusesForLegend[b.id].unlocked);
