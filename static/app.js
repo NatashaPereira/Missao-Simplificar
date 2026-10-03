@@ -1368,51 +1368,90 @@ function criterionBadgeProgress(audit,badge){
 function sortAuditsByDate(audits){return [...audits].sort((a,b)=>(a.audit_timestamp||a.audit_date||'').localeCompare(b.audit_timestamp||b.audit_date||''))}
 
 // ============================================================
-// CONFIGURAÇÃO DE TEMPORADAS
+// CONFIGURAÇÃO DE TEMPORADAS POR EMPRESA
+// ============================================================
+//
+// Todas começam em 01/09/2026.
+//
 // Royal Cargo = 6 meses
-// Demais empresas = 1 mês
+// AMTrans     = 1 mês
+// Rentalog    = 1 mês
+// Next        = 1 mês
+// DC Logistics= 1 mês
 // ============================================================
 
 const SEASON_DURATION_MONTHS = {
-  'Royal Cargo': 6,
-  'AMTrans': 1,
-  'Rentalog': 1,
-  'Next': 1,
-  'DC Logistics': 1
+  'royal-cargo': 6,
+  'amtrans': 1,
+  'rentalog': 1,
+  'next': 1,
+  'dc-logistics': 1
 };
 
-function getCurrentCompanyName(){
+function getCurrentCompanySlug(){
 
-  // A empresa atual vem da sessão do usuário.
-  // Isso é atualizado quando o superadministrador
-  // troca a empresa no seletor.
-
+  // 1. Fonte principal: empresa ativa da sessão
   if(
     typeof currentUserInfo !== 'undefined' &&
-    currentUserInfo &&
-    currentUserInfo.company &&
-    currentUserInfo.company.name
+    currentUserInfo
   ){
-    return currentUserInfo.company.name;
+
+    if(
+      currentUserInfo.company &&
+      currentUserInfo.company.slug
+    ){
+      return String(currentUserInfo.company.slug)
+        .trim()
+        .toLowerCase();
+    }
+
+    // 2. Fallback: procura a empresa pelo companyId
+    if(
+      currentUserInfo.companyId &&
+      Array.isArray(currentUserInfo.companies)
+    ){
+      const company = currentUserInfo.companies.find(
+        c => String(c.id) === String(currentUserInfo.companyId)
+      );
+
+      if(company && company.slug){
+        return String(company.slug)
+          .trim()
+          .toLowerCase();
+      }
+    }
   }
 
-  // Fallback para instalações antigas que ainda
-  // possuam empresa_nome configurada.
+  // 3. Fallback para instalações antigas
   const configured = getConfig('empresa_nome','');
 
-  if(configured){
-    return configured;
+  const legacyMap = {
+    'royal cargo': 'royal-cargo',
+    'royal cargo do brasil': 'royal-cargo',
+    'amtrans': 'amtrans',
+    'rentalog': 'rentalog',
+    'next': 'next',
+    'dc logistics': 'dc-logistics',
+    'dc logistics brasil': 'dc-logistics'
+  };
+
+  const normalized = String(configured)
+    .trim()
+    .toLowerCase();
+
+  if(legacyMap[normalized]){
+    return legacyMap[normalized];
   }
 
-  return 'Royal Cargo';
+  // Instalação antiga sem identificação da empresa.
+  return 'royal-cargo';
 }
 
 function getSeasonDurationMonths(){
-  const empresa = getCurrentCompanyName();
 
-  // Royal = 6 meses
-  // Demais empresas = 1 mês
-  return SEASON_DURATION_MONTHS[empresa] || 1;
+  const companySlug = getCurrentCompanySlug();
+
+  return SEASON_DURATION_MONTHS[companySlug] || 1;
 }
 
 function addMonths(date, months){
@@ -1912,13 +1951,36 @@ async function loadCurrentUserInfo(){
   try{
     const res=await fetch('/api/me');
     if(!res.ok)return null;
+
     currentUserInfo=await res.json();
+
     renderSidebarUserCard();
     renderCompanySwitcher();
     updatePublicLink();
-    if(typeof renderReports==='function'&&document.getElementById('reports-list'))renderReports();
+
+    if(
+      typeof renderReports==='function' &&
+      document.getElementById('reports-list')
+    ){
+      renderReports();
+    }
+
+    // IMPORTANTE:
+    // Se os dados já tiverem sido carregados antes da sessão,
+    // recalcula os selos/ranking agora que sabemos a empresa ativa.
+    if(
+      Array.isArray(allData) &&
+      allData.length &&
+      typeof refreshAll==='function'
+    ){
+      refreshAll();
+    }
+
     return currentUserInfo;
-  }catch(e){return null}
+
+  }catch(e){
+    return null;
+  }
 }
 loadCurrentUserInfo();
 
